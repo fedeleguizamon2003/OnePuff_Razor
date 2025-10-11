@@ -1,93 +1,57 @@
 ﻿@page
 @model OnePuff_Razor.Pages.Productos.CreateModel
-
 @{
-    ViewData["Title"] = "Crear Producto";
-    Layout = "_Layout"; // Usa el layout compartido
+    ViewData["Title"] = "Crear producto";
+    Layout = "_Layout";
 }
 
-<h1>Crear nuevo producto</h1>
+<h2 class="mb-3">➕ Crear producto</h2>
 
-<hr />
+<form method="post" class="border p-3 rounded bg-light">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
-<div class="row">
-    <div class="col-md-6">
-        <!-- El formulario se envía al método OnPostAsync del CreateModel -->
-        <form method="post">
-            <!-- Muestra errores generales del modelo -->
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <!-- Campo: Nombre del producto -->
-            <div class="form-group">
-                <label asp-for="Producto.Nombre" class="control-label">Nombre</label>
-                <input asp-for="Producto.Nombre" class="form-control" />
-                <span asp-validation-for="Producto.Nombre" class="text-danger"></span>
-            </div>
-
-            <!-- Campo: Precio -->
-            <div class="form-group">
-                <label asp-for="Producto.Precio" class="control-label">Precio</label>
-                <input asp-for="Producto.Precio" class="form-control" />
-                <span asp-validation-for="Producto.Precio" class="text-danger"></span>
-            </div>
-
-            <!-- Campo: Peso -->
-            <div class="form-group">
-                <label asp-for="Producto.Peso" class="control-label">Peso (gramos)</label>
-                <input asp-for="Producto.Peso" class="form-control" />
-                <span asp-validation-for="Producto.Peso" class="text-danger"></span>
-            </div>
-
-            <!-- Campo: URL de imagen -->
-            <div class="form-group">
-                <label asp-for="Producto.UrlImagen" class="control-label">URL Imagen</label>
-                <input asp-for="Producto.UrlImagen" class="form-control" />
-                <span asp-validation-for="Producto.UrlImagen" class="text-danger"></span>
-            </div>
-
-            <!-- Campo: Stock -->
-            <div class="form-group">
-                <label asp-for="Producto.Stock" class="control-label">Stock</label>
-                <input asp-for="Producto.Stock" class="form-control" />
-                <span asp-validation-for="Producto.Stock" class="text-danger"></span>
-            </div>
-
-            <!-- Campo: Estado (Activo/Inactivo) -->
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Producto.EstaActivo" />
-                    @Html.DisplayNameFor(model => model.Producto.EstaActivo)
-                </label>
-            </div>
-
-            <!-- Campo: Categoría (reemplazamos el input por un select) -->
-            <div class="form-group">
-                <label asp-for="Producto.CategoriaId" class="control-label">Categoría</label>
-
-                <!-- Combo con las categorías -->
-                <!-- asp-items se llena desde la propiedad CategoriasLista del .cshtml.cs -->
-                <select asp-for="Producto.CategoriaId"
-                        class="form-control"
-                        asp-items="Model.CategoriasLista">
-                    <option value="">-- Selecciona una categoría --</option>
-                </select>
-
-                <!-- Muestra validaciones -->
-                <span asp-validation-for="Producto.CategoriaId" class="text-danger"></span>
-            </div>
-
-            <!-- Botón de guardado -->
-            <div class="form-group mt-3">
-                <input type="submit" value="Crear" class="btn btn-primary" />
-                <a asp-page="Index" class="btn btn-secondary">Volver al listado</a>
-            </div>
-        </form>
+    <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input asp-for="Producto.Nombre" class="form-control" />
+        <span asp-validation-for="Producto.Nombre" class="text-danger"></span>
     </div>
-</div>
 
-<!-- Scripts para validaciones del lado del cliente -->
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Precio</label>
+            <input asp-for="Producto.Precio" class="form-control" />
+            <span asp-validation-for="Producto.Precio" class="text-danger"></span>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Peso (g)</label>
+            <input asp-for="Producto.Peso" class="form-control" />
+            <span asp-validation-for="Producto.Peso" class="text-danger"></span>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Stock</label>
+            <input asp-for="Producto.Stock" class="form-control" />
+            <span asp-validation-for="Producto.Stock" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Categoría</label>
+        <!-- 🔹 OJO: asp-items usa Model.CategoriasSelectList -->
+        <select asp-for="Producto.CategoriaId" asp-items="Model.CategoriasSelectList" class="form-select"></select>
+        <span asp-validation-for="Producto.CategoriaId" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" asp-for="Producto.EstaActivo" />
+        <label class="form-check-label" asp-for="Producto.EstaActivo">Activo</label>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a asp-page="/Productos/Admin" class="btn btn-secondary">Volver</a>
+    </div>
+</form>
+
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 }

@@ -1,37 +1,117 @@
 ﻿@page
 @model OnePuff_Razor.Pages.Productos.AdminModel
 @{
-    ViewData["Title"] = "Panel de administración";
-    Layout = "_Layout";
+    ViewData["Title"] = "Gestión de Productos";
 }
 
-<h1 class="mb-4">⚙️ Panel de administración</h1>
+<!-- 🔹 Encabezado -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">🧩 Gestión de Productos</h2>
 
-<p>Bienvenido, @User.Identity?.Name 👋 (Administrador)</p>
+    <div>
+        <a asp-page="/Categorias/Create" class="btn btn-outline-secondary me-2">
+            ➕ Nueva Categoría
+        </a>
+        <a asp-page="/Productos/Create" class="btn btn-success">
+            ➕ Nuevo Producto
+        </a>
+    </div>
+</div>
 
-<a asp-page="/Productos/Create" class="btn btn-success mb-3">➕ Agregar nuevo producto</a>
+<!-- 🔹 Mensaje temporal (TempData) -->
+@if (Model.Mensaje != null)
+{
+    <div class="alert alert-info alert-dismissible fade show text-center shadow-sm" role="alert">
+        @Html.Raw(Model.Mensaje)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
-<table class="table table-bordered">
+<!-- 🔹 Formulario de filtros -->
+<form method="get" class="row g-3 align-items-end mb-4 bg-light p-3 rounded shadow-sm">
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Buscar por nombre</label>
+        <input type="text" name="BuscarNombre" value="@Model.BuscarNombre" class="form-control" placeholder="Ej: arroz, gaseosa..." />
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Categoría</label>
+        <select name="CategoriaId" class="form-select">
+            <option value="">Todas</option>
+            @foreach (var cat in Model.Categorias)
+            {
+                <option value="@cat.CategoriaId" selected="@(cat.CategoriaId == Model.CategoriaId)">
+                    @cat.Nombre
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Estado</label>
+        <select name="Estado" class="form-select">
+            <option value="Todos" selected="@("Todos" == Model.Estado)">Todos</option>
+            <option value="Activos" selected="@("Activos" == Model.Estado)">Activos</option>
+            <option value="Inactivos" selected="@("Inactivos" == Model.Estado)">Inactivos</option>
+        </select>
+    </div>
+
+    <div class="col-md-1 text-end">
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-filter"></i> Filtrar
+        </button>
+    </div>
+</form>
+
+<!-- 🔹 Tabla de productos -->
+<table class="table table-hover align-middle shadow-sm">
     <thead class="table-light">
         <tr>
             <th>Nombre</th>
             <th>Categoría</th>
             <th>Precio</th>
             <th>Stock</th>
-            <th>Acciones</th>
+            <th>Estado</th>
+            <th class="text-center" style="width: 220px;">Acciones</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var p in Model.Productos)
+        @if (Model.Productos.Any())
+        {
+            @foreach (var p in Model.Productos)
+            {
+                <tr>
+                    <td>@p.Nombre</td>
+                    <td>@p.Categoria?.Nombre</td>
+                    <td>$@p.Precio</td>
+                    <td>@p.Stock</td>
+                    <td>
+                        @if (p.EstaActivo)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactivo</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <a asp-page="Edit" asp-route-id="@p.ProductoId" class="btn btn-sm btn-outline-primary me-1">✏️ Editar</a>
+                        <a asp-page="Delete" asp-route-id="@p.ProductoId" class="btn btn-sm btn-outline-danger me-1">🗑️ Eliminar</a>
+                        <form method="post" asp-page-handler="ToggleEstado" asp-route-id="@p.ProductoId" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                @(p.EstaActivo ? "Desactivar" : "Activar")
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+        else
         {
             <tr>
-                <td>@p.Nombre</td>
-                <td>@p.Categoria?.Nombre</td>
-                <td>$@p.Precio</td>
-                <td>@p.Stock</td>
-                <td>
-                    <a asp-page="/Productos/Edit" asp-route-id="@p.ProductoId" class="btn btn-warning btn-sm">Editar</a>
-                    <a asp-page="/Productos/Delete" asp-route-id="@p.ProductoId" class="btn btn-danger btn-sm">Eliminar</a>
+                <td colspan="6" class="text-center text-muted py-3">
+                    No se encontraron productos con los filtros aplicados.
                 </td>
             </tr>
         }

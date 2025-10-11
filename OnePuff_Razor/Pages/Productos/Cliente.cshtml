@@ -1,34 +1,81 @@
 ﻿@page
 @model OnePuff_Razor.Pages.Productos.ClienteModel
 @{
-    ViewData["Title"] = "Productos disponibles";
-    Layout = "_Layout";
+    ViewData["Title"] = "Catálogo de Productos";
 }
 
-<h1 class="mb-4">🛒 Productos disponibles</h1>
+<!-- 🔹 Encabezado -->
+<div class="text-center mb-4">
+    <h2 class="fw-bold">🛒 Catálogo de Productos</h2>
+    <p class="text-muted">Filtrá los productos por nombre, categoría o precio.</p>
+</div>
 
-<!-- Mensaje de bienvenida -->
-<p>Bienvenido, @User.Identity?.Name 👋 (Cliente)</p>
+<!-- 🔹 Formulario de filtros -->
+<form method="get" class="row g-3 align-items-end mb-4 bg-light p-3 rounded shadow-sm">
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Buscar por nombre</label>
+        <input type="text" name="BuscarNombre" value="@Model.BuscarNombre" class="form-control" placeholder="Ej: arroz, gaseosa..." />
+    </div>
 
-<!-- Tabla de productos -->
-<table class="table table-striped">
-    <thead class="table-light">
-        <tr>
-            <th>Nombre</th>
-            <th>Categoría</th>
-            <th>Precio</th>
-            <th>Peso (g)</th>
-        </tr>
-    </thead>
-    <tbody>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Categoría</label>
+        <select name="CategoriaId" class="form-select">
+            <option value="">Todas</option>
+            @foreach (var cat in Model.Categorias)
+            {
+                <option value="@cat.CategoriaId" selected="@(cat.CategoriaId == Model.CategoriaId)">
+                    @cat.Nombre
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label fw-semibold">Desde ($)</label>
+        <input type="number" name="PrecioMin" value="@(Model.PrecioMin ?? 0)" class="form-control" min="0" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label fw-semibold">Hasta ($)</label>
+        <input type="number" name="PrecioMax" value="@(Model.PrecioMax ?? 0)" class="form-control" min="0" />
+    </div>
+
+    <div class="col-md-1 text-end">
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-search"></i> Filtrar
+        </button>
+    </div>
+</form>
+
+<!-- 🔹 Resultados -->
+@if (Model.Productos.Any())
+{
+    <div class="row">
         @foreach (var p in Model.Productos)
         {
-            <tr>
-                <td>@p.Nombre</td>
-                <td>@p.Categoria?.Nombre</td>
-                <td>$@p.Precio</td>
-                <td>@p.Peso</td>
-            </tr>
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <!-- Imagen del producto -->
+                    <img src="@(p.UrlImagen ?? "/images/default-product.jpg")"
+                         class="card-img-top"
+                         alt="@p.Nombre"
+                         style="height: 180px; object-fit: cover;" />
+
+                    <div class="card-body text-center">
+                        <h5 class="card-title fw-bold">@p.Nombre</h5>
+                        <p class="text-muted mb-1">@p.Categoria?.Nombre</p>
+                        <p class="fw-semibold text-success fs-5">$@p.Precio</p>
+                        <small class="text-muted">Stock: @p.Stock unidades</small>
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning text-center">
+        😕 No se encontraron productos que coincidan con los filtros seleccionados.
+    </div>
+}
+S

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering; // 👈 Necesario para usar SelectList
+using Microsoft.AspNetCore.Mvc.Rendering;
 using OnePuff_Razor.Data;
 using OnePuff_Razor.Models;
 
@@ -12,42 +8,47 @@ namespace OnePuff_Razor.Pages.Productos
 {
     public class CreateModel : PageModel
     {
-        private readonly OnePuff_Razor.Data.AppDbContext _context;
+        private readonly AppDbContext _context;
+        public CreateModel(AppDbContext context) => _context = context;
 
-        public CreateModel(OnePuff_Razor.Data.AppDbContext context)
-        {
-            _context = context;
-        }
-
+        // Modelo a crear
         [BindProperty]
-        public Producto Producto { get; set; } = default!;
+        public Producto Producto { get; set; } = new Producto();
 
-        // 👇 Esta propiedad se usará para llenar el combo de categorías
-        public SelectList CategoriasLista { get; set; } = default!;
+        // 🔹 Fuente de datos para el <select> de Categorías
+        public SelectList CategoriasSelectList { get; set; } = default!;
 
-        public IActionResult OnGet()
+        public void OnGet()
         {
-            // Traemos las categorías desde la base de datos y las cargamos en el combo
-            CategoriasLista = new SelectList(_context.Categorias, "CategoriaId", "Nombre");
-            return Page();
+            // Cargar combo de categorías
+            CategoriasSelectList = new SelectList(_context.Categorias, "CategoriaId", "Nombre");
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // Validación de modelo
+            // Volvemos a cargar el combo si hay errores
+            CategoriasSelectList = new SelectList(_context.Categorias, "CategoriaId", "Nombre");
+
             if (!ModelState.IsValid)
+                return Page();
+
+            // 🔎 Validación: evitar duplicados por categoría (Nombre + CategoriaId)
+            var nombre = (Producto.Nombre ?? string.Empty).Trim().ToLower();
+            bool existe = _context.Productos.Any(p =>
+                p.CategoriaId == Producto.CategoriaId &&
+                p.Nombre.ToLower() == nombre
+            );
+
+            if (existe)
             {
-                // 👇 Si hay error, recargamos la lista para que no se vacíe al volver
-                CategoriasLista = new SelectList(_context.Categorias, "CategoriaId", "Nombre");
+                ModelState.AddModelError("Producto.Nombre", "Ya existe un producto con ese nombre en esta categoría.");
                 return Page();
             }
 
-            // Guardamos el producto nuevo
             _context.Productos.Add(Producto);
             await _context.SaveChangesAsync();
 
-            // Redirigimos al listado
-            return RedirectToPage("./Index");
+            return RedirectToPage("/Productos/Admin");
         }
     }
 }

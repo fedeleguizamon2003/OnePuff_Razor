@@ -5,29 +5,37 @@
     Layout = "_Layout";
 }
 
-<h1 class="mb-4">🔐 Iniciar Sesión</h1>
+<h1 class="mb-4">
+    <img src="https://cdn-icons-png.flaticon.com/512/565/565547.png" alt="Login" width="40" class="me-2" />
+    Iniciar Sesión
+</h1>
 
 <form method="post" class="border p-4 rounded shadow-sm">
+    <!-- 🔹 Muestra los errores de validación del servidor -->
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+    <!-- 🔹 Campo Email -->
     <div class="mb-3">
-        <label>Email</label>
-        <input asp-for="Input.Email" class="form-control" />
-        <span asp-validation-for="Input.Email" class="text-danger"></span>
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" class="form-control" placeholder="tuemail@ejemplo.com" />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
+    <!-- 🔹 Campo Contraseña -->
     <div class="mb-3">
-        <label>Contraseña</label>
-        <input asp-for="Input.Contrasena" type="password" class="form-control" />
-        <span asp-validation-for="Input.Contrasena" class="text-danger"></span>
+        <label asp-for="Password" class="form-label">Contraseña</label>
+        <input asp-for="Password" type="password" class="form-control" placeholder="********" />
+        <span asp-validation-for="Password" class="text-danger"></span>
     </div>
 
-    <div class="mt-4 text-center">
+    <!-- 🔹 Botones -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
         <button type="submit" class="btn btn-primary">Ingresar</button>
         <a asp-page="/Usuarios/Register" class="btn btn-link">Crear una cuenta</a>
     </div>
 </form>
 
 @section Scripts {
+    <!-- Scripts de validación -->
     <partial name="_ValidationScriptsPartial" />
 }

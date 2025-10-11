@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering; // 👈 Necesario para SelectList
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OnePuff_Razor.Data;
 using OnePuff_Razor.Models;
@@ -13,81 +9,66 @@ namespace OnePuff_Razor.Pages.Productos
 {
     public class EditModel : PageModel
     {
-        private readonly OnePuff_Razor.Data.AppDbContext _context;
-
-        public EditModel(OnePuff_Razor.Data.AppDbContext context)
-        {
-            _context = context;
-        }
+        private readonly AppDbContext _context;
+        public EditModel(AppDbContext context) => _context = context;
 
         [BindProperty]
-        public Producto Producto { get; set; } = default!;
+        public Producto Producto { get; set; } = new Producto();
 
-        // 👇 Lista para llenar el combo de categorías
-        public SelectList CategoriasLista { get; set; } = default!;
+        public SelectList CategoriasSelectList { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            // Validación de parámetro nulo
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            // Buscamos el producto que queremos editar
-            var producto = await _context.Productos
-                .Include(p => p.Categoria) // Incluimos la categoría asociada
-                .FirstOrDefaultAsync(m => m.ProductoId == id);
+            var prod = await _context.Productos.FindAsync(id.Value);
+            if (prod == null) return NotFound();
 
-            if (producto == null)
-            {
-                return NotFound();
-            }
+            Producto = prod;
 
-            // Asignamos el producto encontrado al modelo
-            Producto = producto;
-
-            // Cargamos la lista de categorías para el combo
-            CategoriasLista = new SelectList(_context.Categorias, "CategoriaId", "Nombre", Producto.CategoriaId);
-
+            // Cargar combo
+            CategoriasSelectList = new SelectList(_context.Categorias, "CategoriaId", "Nombre");
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
+            // Siempre recargar combo si hay que volver a la página
+            CategoriasSelectList = new SelectList(_context.Categorias, "CategoriaId", "Nombre");
+
             if (!ModelState.IsValid)
+                return Page();
+
+            // 🔎 Validación: duplicado dentro de la misma categoría, excluyéndome a mí
+            var nombre = (Producto.Nombre ?? string.Empty).Trim().ToLower();
+            bool duplicado = await _context.Productos.AnyAsync(p =>
+                p.ProductoId != Producto.ProductoId &&
+                p.CategoriaId == Producto.CategoriaId &&
+                p.Nombre.ToLower() == nombre
+            );
+
+            if (duplicado)
             {
-                // 👇 Si falla validación, recargamos la lista de categorías
-                CategoriasLista = new SelectList(_context.Categorias, "CategoriaId", "Nombre", Producto.CategoriaId);
+                ModelState.AddModelError("Producto.Nombre", "Ya existe otro producto con ese nombre en esta categoría.");
                 return Page();
             }
 
-            // Marcamos el producto como modificado
+            // Guardar cambios
             _context.Attach(Producto).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync(); // Guardamos cambios
+                await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ProductoExists(Producto.ProductoId))
-                {
+                if (!_context.Productos.Any(p => p.ProductoId == Producto.ProductoId))
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
 
-            // Redirigimos al índice de productos
-            return RedirectToPage("./Index");
-        }
-
-        private bool ProductoExists(int id)
-        {
-            return _context.Productos.Any(e => e.ProductoId == id);
+            return RedirectToPage("/Productos/Admin");
         }
     }
 }

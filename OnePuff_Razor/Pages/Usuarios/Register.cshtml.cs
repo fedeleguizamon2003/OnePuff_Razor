@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using OnePuff_Razor.Data;
 using OnePuff_Razor.Models;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -12,107 +10,71 @@ namespace OnePuff_Razor.Pages.Usuarios
     public class RegisterModel : PageModel
     {
         private readonly AppDbContext _context;
+        public RegisterModel(AppDbContext context) => _context = context;
 
-        public RegisterModel(AppDbContext context)
-        {
-            _context = context;
-        }
+        [BindProperty] public Usuario Usuario { get; set; } = new Usuario();
+        [BindProperty] public Direccion Direccion { get; set; } = new Direccion();
 
-        // =============================
-        // 1️⃣ ViewModel para el formulario
-        // =============================
-        public class InputModel
-        {
-            [Required(ErrorMessage = "El nombre es obligatorio")]
-            public string Nombre { get; set; } = string.Empty;
+        // 👇 Este es el campo que llena el form (NO usar Usuario.Contraseña)
+        [BindProperty] public string Password { get; set; } = string.Empty;
 
-            [Required(ErrorMessage = "El apellido es obligatorio")]
-            public string Apellido { get; set; } = string.Empty;
+        public void OnGet() { }
 
-            [Required(ErrorMessage = "El DNI es obligatorio")]
-            public string Dni { get; set; } = string.Empty;
-
-            [Required(ErrorMessage = "El correo es obligatorio")]
-            [EmailAddress(ErrorMessage = "Formato de correo inválido")]
-            public string Email { get; set; } = string.Empty;
-
-            [Required(ErrorMessage = "La contraseña es obligatoria")]
-            [DataType(DataType.Password)]
-            public string Contrasena { get; set; } = string.Empty;
-
-            [Required(ErrorMessage = "El rol es obligatorio")]
-            public string Rol { get; set; } = "Cliente";
-
-            // Campos de dirección (solo si el rol es Cliente)
-            public string? Calle { get; set; }
-            public string? Altura { get; set; }
-            public string? Localidad { get; set; }
-        }
-
-        // =============================
-        // 2️⃣ Propiedad que une el form con el ViewModel
-        // =============================
-        [BindProperty]
-        public InputModel Input { get; set; } = new();
-
-        public void OnGet()
-        {
-        }
-
-        // =============================
-        // 3️⃣ Método POST del registro
-        // =============================
         public async Task<IActionResult> OnPostAsync()
         {
+            // 1️⃣ Validar contraseña del formulario
+            if (string.IsNullOrWhiteSpace(Password))
+                ModelState.AddModelError(nameof(Password), "La contraseña es obligatoria.");
+
+            // 2️⃣ Normalizar datos básicos
+            Usuario.Dni = Usuario.Dni?.Trim();
+            Usuario.Email = Usuario.Email?.Trim().ToLower();
+
+            // 3️⃣ Validar duplicados
+            if (_context.Usuarios.Any(u => u.Dni == Usuario.Dni))
+                ModelState.AddModelError("Usuario.Dni", "Ya existe un usuario registrado con ese DNI.");
+            if (_context.Usuarios.Any(u => u.Email == Usuario.Email))
+                ModelState.AddModelError("Usuario.Email", "Ya existe una cuenta con este correo electrónico.");
+
+            // 4️⃣ Si hay errores, volvemos (ignorando PasswordHash por ahora)
+            // 👉 Removemos el campo de la validación temporalmente
+            ModelState.Remove("Usuario.PasswordHash");
+
             if (!ModelState.IsValid)
             {
+                foreach (var e in ModelState)
+                    if (e.Value?.Errors.Count > 0)
+                        Console.WriteLine($"❌ {e.Key}: {string.Join(", ", e.Value.Errors.Select(er => er.ErrorMessage))}");
+
                 return Page();
             }
 
-            // ✅ Generar el hash SHA256 de la contraseña
-            string hashed = Sha256Hex(Input.Contrasena);
-
-            // ✅ Crear el objeto Usuario (entidad)
-            var usuario = new Usuario
+            // 5️⃣ Hash de la contraseña
+            using (var sha = SHA256.Create())
             {
-                Nombre = Input.Nombre.Trim(),
-                Apellido = Input.Apellido.Trim(),
-                Dni = Input.Dni.Trim(),
-                Email = Input.Email.Trim().ToLowerInvariant(),
-                PasswordHash = hashed,
-                Rol = Input.Rol
-            };
-
-            // ✅ Si el usuario es Cliente, le agregamos la dirección
-            if (Input.Rol == "Cliente")
-            {
-                usuario.Direccion = new Direccion
-                {
-                    Calle = Input.Calle ?? string.Empty,
-                    Altura = Input.Altura ?? string.Empty,
-                    Localidad = Input.Localidad ?? string.Empty
-                };
+                var bytes = Encoding.UTF8.GetBytes(Password);
+                var hash = sha.ComputeHash(bytes);
+                Usuario.PasswordHash = BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
 
-            // ✅ Guardar en la base de datos
-            _context.Usuarios.Add(usuario);
+            // 6️⃣ Revalidamos solo el objeto Usuario (ahora con el hash cargado)
+            TryValidateModel(Usuario, nameof(Usuario));
+
+            // 7️⃣ Guardamos usuario
+            _context.Usuarios.Add(Usuario);
             await _context.SaveChangesAsync();
 
-            // ✅ Redirigir según rol
-            if (usuario.Rol == "Administrador")
-                return RedirectToPage("/Productos/Index");
-            else
-                return RedirectToPage("/Categorias/Index");
+            // 8️⃣ Si es cliente, guardar dirección vinculada
+            if (Usuario.Rol == "Cliente")
+            {
+                Direccion.UsuarioId = Usuario.UsuarioId;
+                _context.Direcciones.Add(Direccion);
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["RegistroExitoso"] = "✅ Cuenta creada correctamente. Iniciá sesión.";
+            return RedirectToPage("/Usuarios/Login");
         }
 
-        // =============================
-        // 4️⃣ Función auxiliar para hashear la contraseña
-        // =============================
-        private static string Sha256Hex(string input)
-        {
-            using var sha = SHA256.Create();
-            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(input));
-            return Convert.ToHexString(bytes);
-        }
     }
 }

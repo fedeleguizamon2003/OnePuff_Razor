@@ -5,7 +5,6 @@ namespace OnePuff_Razor.Models
 {
     public class Direccion
     {
-        // ↳ En BD la PK se llama DireccionId
         public int DireccionId { get; set; }
 
         [Required]
@@ -17,10 +16,10 @@ namespace OnePuff_Razor.Models
         [Required]
         public string Localidad { get; set; } = string.Empty;
 
-        // FK a Usuario (1:1)
         [ForeignKey(nameof(Usuario))]
         public int UsuarioId { get; set; }
 
-        public Usuario Usuario { get; set; } = null!;
+        // 👇 Hacerlo opcional evita el “The Usuario field is required” en ModelState.
+        public Usuario? Usuario { get; set; }
     }
 }
