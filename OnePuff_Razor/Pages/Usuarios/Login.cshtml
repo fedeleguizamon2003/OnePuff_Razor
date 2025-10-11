@@ -1,0 +1,33 @@
+﻿@page
+@model OnePuff_Razor.Pages.Usuarios.LoginModel
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_Layout";
+}
+
+<h1 class="mb-4">🔐 Iniciar Sesión</h1>
+
+<form method="post" class="border p-4 rounded shadow-sm">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label>Email</label>
+        <input asp-for="Input.Email" class="form-control" />
+        <span asp-validation-for="Input.Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Contraseña</label>
+        <input asp-for="Input.Contrasena" type="password" class="form-control" />
+        <span asp-validation-for="Input.Contrasena" class="text-danger"></span>
+    </div>
+
+    <div class="mt-4 text-center">
+        <button type="submit" class="btn btn-primary">Ingresar</button>
+        <a asp-page="/Usuarios/Register" class="btn btn-link">Crear una cuenta</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

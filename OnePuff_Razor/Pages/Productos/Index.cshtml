@@ -1,0 +1,80 @@
+﻿@page
+@model OnePuff_Razor.Pages.Productos.IndexModel
+
+@{
+    ViewData["Title"] = "Listado de Productos";
+    Layout = "_Layout";
+}
+
+<h1 class="mb-4 text-center">🛒 Catálogo de Productos</h1>
+
+<div class="text-end mb-3">
+    <!-- Botón para crear nuevo producto -->
+    <a asp-page="Create" class="btn btn-primary">➕ Agregar nuevo producto</a>
+</div>
+
+<!-- Si no hay productos -->
+@if (Model.Productos == null || !Model.Productos.Any())
+{
+    <div class="alert alert-info text-center">
+        No hay productos cargados aún.
+    </div>
+}
+else
+{
+    <!-- Grid de productos -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var item in Model.Productos)
+        {
+            <div class="col">
+                <div class="card shadow-sm h-100">
+
+                    <!-- Imagen del producto -->
+                    @if (!string.IsNullOrEmpty(item.UrlImagen))
+                    {
+                        <img src="@item.UrlImagen" class="card-img-top" alt="@item.Nombre" style="height: 180px; object-fit: contain;" />
+                    }
+                    else
+                    {
+                        <!-- Imagen por defecto si no hay URL -->
+                        <img src="https://via.placeholder.com/180x180.png?text=Sin+Imagen" class="card-img-top" alt="Sin imagen" />
+                    }
+
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Nombre</h5>
+                        <p class="card-text mb-1"><strong>Precio:</strong> $@item.Precio</p>
+                        <p class="card-text mb-1"><strong>Stock:</strong> @item.Stock unidades</p>
+
+                        <!-- Mostramos el nombre de la categoría -->
+                        <p class="card-text">
+                            <strong>Categoría:</strong> @item.Categoria?.Nombre
+                        </p>
+
+                        <!-- Estado -->
+                        @if (item.EstaActivo)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactivo</span>
+                        }
+                    </div>
+
+                    <div class="card-footer text-center">
+                        <!-- Botones de acción -->
+                        <a asp-page="Edit" asp-route-id="@item.ProductoId" class="btn btn-warning btn-sm">✏️ Editar</a>
+                        <a asp-page="Details" asp-route-id="@item.ProductoId" class="btn btn-info btn-sm">ℹ️ Detalles</a>
+                        <a asp-page="Delete" asp-route-id="@item.ProductoId" class="btn btn-danger btn-sm">🗑️ Eliminar</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

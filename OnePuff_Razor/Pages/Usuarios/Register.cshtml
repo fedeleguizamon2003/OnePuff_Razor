@@ -1,0 +1,98 @@
+﻿@page
+@model OnePuff_Razor.Pages.Usuarios.RegisterModel
+@{
+    ViewData["Title"] = "Registro de Usuario";
+    Layout = "_Layout";
+}
+
+<h1 class="mb-4">🧍 Registro de Usuario</h1>
+
+<form method="post" class="border p-4 rounded shadow-sm">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <!-- Datos personales -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label>Nombre</label>
+            <input asp-for="Input.Nombre" class="form-control" />
+            <span asp-validation-for="Input.Nombre" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label>Apellido</label>
+            <input asp-for="Input.Apellido" class="form-control" />
+            <span asp-validation-for="Input.Apellido" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label>Email</label>
+            <input asp-for="Input.Email" type="email" class="form-control" />
+            <span asp-validation-for="Input.Email" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label>DNI</label>
+            <input asp-for="Input.Dni" class="form-control" />
+            <span asp-validation-for="Input.Dni" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label>Contraseña</label>
+        <input asp-for="Input.Contrasena" class="form-control" type="password" />
+        <span asp-validation-for="Input.Contrasena" class="text-danger"></span>
+    </div>
+
+    <!-- Rol -->
+    <div class="mb-3">
+        <label>Rol</label>
+        <select asp-for="Input.Rol" class="form-control">
+            <option value="Cliente">Cliente</option>
+            <option value="Administrador">Administrador</option>
+        </select>
+        <span asp-validation-for="Input.Rol" class="text-danger"></span>
+    </div>
+
+    <!-- Dirección (solo visible para Cliente con JS simple) -->
+    <div id="direccionFields" class="border-top pt-3">
+        <h5>Dirección (solo clientes)</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <label>Calle</label>
+                <input asp-for="Input.Calle" class="form-control" />
+                <span asp-validation-for="Input.Calle" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label>Altura</label>
+                <input asp-for="Input.Altura" class="form-control" />
+                <span asp-validation-for="Input.Altura" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label>Localidad</label>
+                <input asp-for="Input.Localidad" class="form-control" />
+                <span asp-validation-for="Input.Localidad" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-center">
+        <button type="submit" class="btn btn-success">Registrarme</button>
+        <a asp-page="/Usuarios/Login" class="btn btn-link">Ya tengo cuenta</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // 👇 Oculta los campos de dirección cuando el rol no es Cliente
+        const rolSelect = document.querySelector('select[name="Input.Rol"]');
+        const direccionFields = document.getElementById('direccionFields');
+
+        function toggleDireccion() {
+            direccionFields.style.display = rolSelect.value === 'Cliente' ? 'block' : 'none';
+        }
+
+        rolSelect.addEventListener('change', toggleDireccion);
+        toggleDireccion();
+    </script>
+}

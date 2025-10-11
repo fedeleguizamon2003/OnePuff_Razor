@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnePuff_Razor", "OnePuff_Razor\OnePuff_Razor.csproj", "{CDBEB7B1-F4A3-46D0-8841-789EFDF3E3F5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CDBEB7B1-F4A3-46D0-8841-789EFDF3E3F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDBEB7B1-F4A3-46D0-8841-789EFDF3E3F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDBEB7B1-F4A3-46D0-8841-789EFDF3E3F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDBEB7B1-F4A3-46D0-8841-789EFDF3E3F5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3150408A-A35A-427C-9F71-B3F8C83EC88D}
+	EndGlobalSection
+EndGlobal
