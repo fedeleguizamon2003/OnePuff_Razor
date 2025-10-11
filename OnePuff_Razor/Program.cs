@@ -1,40 +1,40 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
+Ôªøusing Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using OnePuff_Razor.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ?? 1) ConexiÛn a la base de datos
+// 1) DB
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
-// ?? 2) Activar autenticaciÛn con cookies
+// 2) Cookies de autenticaci√≥n
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Usuarios/Login";        // Si no est· logueado, redirige ac·
-        options.LogoutPath = "/Usuarios/Logout";      // P·gina de logout
-        options.AccessDeniedPath = "/Usuarios/Login"; // Si intenta acceder sin permiso
+        options.LoginPath = "/Usuarios/Login";
+        options.LogoutPath = "/Usuarios/Logout";
+        options.AccessDeniedPath = "/Usuarios/Login";
         options.ExpireTimeSpan = TimeSpan.FromHours(2);
     });
 
-builder.Services.AddRazorPages(options =>
-{
-    // ?? Ejemplo: proteger carpeta Productos solo para admin
-    options.Conventions.AuthorizeFolder("/Productos", "AdminOnly");
-    options.Conventions.AuthorizeFolder("/Categorias", "ClienteOnly");
-});
-
-// ?? 3) PolÌticas de autorizaciÛn por rol
+// 3) Autorizaci√≥n y convenciones
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Administrador"));
-    options.AddPolicy("ClienteOnly", policy => policy.RequireRole("Cliente"));
+    options.AddPolicy("AdminOnly", p => p.RequireRole("Administrador"));
+    options.AddPolicy("ClienteOnly", p => p.RequireRole("Cliente"));
+});
+
+builder.Services.AddRazorPages(options =>
+{
+    // ‚ùå NO bloquear toda la carpeta /Productos como AdminOnly.
+    // ‚úÖ Autorizar por p√°gina espec√≠fica:
+    options.Conventions.AuthorizePage("/Productos/Admin", "AdminOnly");
+    options.Conventions.AuthorizePage("/Productos/Cliente", "ClienteOnly");
 });
 
 var app = builder.Build();
 
-// ?? 4) Middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -45,10 +45,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// ?? IMPORTANTE: el orden
+// Orden correcto
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
-
 app.Run();

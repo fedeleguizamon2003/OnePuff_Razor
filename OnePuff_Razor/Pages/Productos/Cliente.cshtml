@@ -1,0 +1,34 @@
+﻿@page
+@model OnePuff_Razor.Pages.Productos.ClienteModel
+@{
+    ViewData["Title"] = "Productos disponibles";
+    Layout = "_Layout";
+}
+
+<h1 class="mb-4">🛒 Productos disponibles</h1>
+
+<!-- Mensaje de bienvenida -->
+<p>Bienvenido, @User.Identity?.Name 👋 (Cliente)</p>
+
+<!-- Tabla de productos -->
+<table class="table table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Peso (g)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model.Productos)
+        {
+            <tr>
+                <td>@p.Nombre</td>
+                <td>@p.Categoria?.Nombre</td>
+                <td>$@p.Precio</td>
+                <td>@p.Peso</td>
+            </tr>
+        }
+    </tbody>
+</table>

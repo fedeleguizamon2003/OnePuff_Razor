@@ -12,58 +12,100 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
+                <!-- 🔹 Logo / Título -->
                 <a class="navbar-brand" asp-area="" asp-page="/Index">OnePuff_Razor</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+
+                <!-- 🔹 Botón hamburguesa para pantallas chicas -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <!-- 🔹 Menú principal -->
                     <ul class="navbar-nav flex-grow-1">
+                        <!-- Opción común a todos -->
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Inicio</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-page="/Productos/Index">Productos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-page="/Categorias/Index">Categorías</a>
-                        </li>
-                    </ul>
 
-                    <!-- 🔹 🔹 BLOQUE DE USUARIO (AGREGAR AQUÍ) 🔹 🔹 -->
-                    <div class="d-flex align-items-center">
+                        @* ======================================================
+                           🔹 Menú visible según estado de sesión y rol
+                           ====================================================== *@
+
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
-                            <span class="me-2">👤 @User.Identity.Name (@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)</span>
-                            <a asp-page="/Usuarios/Logout" class="btn btn-outline-danger btn-sm">Cerrar sesión</a>
+                            if (User.IsInRole("Administrador"))
+                            {
+                                <!-- 🔸 Menú para Administrador -->
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-page="/Productos/Admin">Gestión de Productos</a>
+                                </li>
+                            }
+                            else if (User.IsInRole("Cliente"))
+                            {
+                                <!-- 🔸 Menú para Cliente -->
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-page="/Productos/Cliente">Productos</a>
+                                </li>
+                            }
                         }
                         else
                         {
-                            <a asp-page="/Usuarios/Login" class="btn btn-outline-primary btn-sm">Iniciar sesión</a>
+                            <!-- 🔸 Menú visible sin iniciar sesión -->
+                            <!-- Cuando se hace clic, redirige a Login -->
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Usuarios/Login">Productos</a>
+                            </li>
+                        }
+                    </ul>
+
+                    @* ======================================================
+                       🔹 Bloque derecho: usuario logueado o login
+                       ====================================================== *@
+                    <div class="d-flex align-items-center">
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <!-- 👤 Mostrar nombre y rol del usuario actual -->
+                            <span class="me-2">
+                                👤 @User.Identity.Name
+                                (@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)
+                            </span>
+
+                            <!-- 🚪 Botón de cierre de sesión -->
+                            <a asp-page="/Usuarios/Logout" class="btn btn-outline-danger btn-sm">
+                                Cerrar sesión
+                            </a>
+                        }
+                        else
+                        {
+                            <!-- 🔐 Botón de inicio de sesión -->
+                            <a asp-page="/Usuarios/Login" class="btn btn-outline-primary btn-sm">
+                                Iniciar sesión
+                            </a>
                         }
                     </div>
-                    <!-- 🔹 🔹 FIN BLOQUE DE USUARIO 🔹 🔹 -->
                 </div>
             </div>
         </nav>
     </header>
 
+    <!-- 🔹 Contenedor principal -->
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
+    <!-- 🔹 Footer -->
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - OnePuff_Razor - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            &copy; 2025 - OnePuff_Razor -
+            <a asp-area="" asp-page="/Privacy">Privacy</a>
         </div>
     </footer>
 
+    <!-- 🔹 Scripts base -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

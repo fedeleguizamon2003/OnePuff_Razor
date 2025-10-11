@@ -70,9 +70,10 @@ namespace OnePuff_Razor.Pages.Usuarios
 
             // ✅ Redirigir según rol
             if (usuario.Rol == "Administrador")
-                return RedirectToPage("/Productos/Index");
+                return RedirectToPage("/Productos/Admin");
             else
-                return RedirectToPage("/Categorias/Index");
+                return RedirectToPage("/Productos/Cliente");
+
         }
 
         private static string Sha256Hex(string input)

@@ -1,0 +1,39 @@
+﻿@page
+@model OnePuff_Razor.Pages.Productos.AdminModel
+@{
+    ViewData["Title"] = "Panel de administración";
+    Layout = "_Layout";
+}
+
+<h1 class="mb-4">⚙️ Panel de administración</h1>
+
+<p>Bienvenido, @User.Identity?.Name 👋 (Administrador)</p>
+
+<a asp-page="/Productos/Create" class="btn btn-success mb-3">➕ Agregar nuevo producto</a>
+
+<table class="table table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model.Productos)
+        {
+            <tr>
+                <td>@p.Nombre</td>
+                <td>@p.Categoria?.Nombre</td>
+                <td>$@p.Precio</td>
+                <td>@p.Stock</td>
+                <td>
+                    <a asp-page="/Productos/Edit" asp-route-id="@p.ProductoId" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-page="/Productos/Delete" asp-route-id="@p.ProductoId" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
