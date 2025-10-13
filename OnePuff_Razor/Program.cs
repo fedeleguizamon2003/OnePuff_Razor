@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using OnePuff_Razor.Data;
+using OnePuff_Razor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +33,8 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizePage("/Productos/Admin", "AdminOnly");
     options.Conventions.AuthorizePage("/Productos/Cliente", "ClienteOnly");
 });
-
+// 4) Servicios personalizados
+builder.Services.AddScoped<CarritoService>(); 
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

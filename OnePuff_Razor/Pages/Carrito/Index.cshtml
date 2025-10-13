@@ -1,0 +1,49 @@
+﻿@page
+@model OnePuff_Razor.Pages.Carrito.IndexModel
+
+<h2>Carrito de Compras</h2>
+
+@if (Model.CarritoActual != null && Model.CarritoActual.Items != null && Model.CarritoActual.Items.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.CarritoActual.Items)
+            {
+                <tr>
+                    <td>@item.Producto.Nombre</td>
+                    <td>$@item.PrecioUnitarioSnapshot</td>
+                    <td>@item.Cantidad</td>
+                    <td>$@(item.PrecioUnitarioSnapshot* item.Cantidad)</td>
+                    <td class="d-flex gap-1">
+                        <form method="post" asp-page-handler="Quitar" asp-route-productoId="@item.ProductoId">
+                            <button class="btn btn-sm btn-warning">-</button>
+                        </form>
+                        <form method="post" asp-page-handler="Agregar" asp-route-productoId="@item.ProductoId">
+                            <button class="btn btn-sm btn-success">+</button>
+                        </form>
+                        <form method="post" asp-page-handler="Eliminar" asp-route-productoId="@item.ProductoId">
+                            <button class="btn btn-sm btn-danger">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <form method="post" asp-page-handler="Vaciar">
+        <button class="btn btn-danger">Vaciar carrito</button>
+    </form>
+}
+else
+{
+    <p>Tu carrito está vacío.</p>
+}

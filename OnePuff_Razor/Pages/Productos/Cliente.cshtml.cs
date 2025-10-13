@@ -10,49 +10,54 @@ namespace OnePuff_Razor.Pages.Productos
     {
         private readonly AppDbContext _context;
 
+        // 📋 Propiedades públicas accesibles desde la vista (.cshtml)
+        public List<Producto> Productos { get; set; } = new();
+        public List<Categoria> Categorias { get; set; } = new();
+
+        // 🧭 Filtros (inputs del formulario)
+        [BindProperty(SupportsGet = true)]
+        public string? NombreFiltro { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? CategoriaIdFiltro { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public decimal? PrecioMinFiltro { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public decimal? PrecioMaxFiltro { get; set; }
+
         public ClienteModel(AppDbContext context)
         {
             _context = context;
         }
 
-        // 🔹 Propiedades de filtro (BindProperty permite que Razor lea los valores del formulario)
-        [BindProperty(SupportsGet = true)] public string? BuscarNombre { get; set; }
-        [BindProperty(SupportsGet = true)] public int? CategoriaId { get; set; }
-        [BindProperty(SupportsGet = true)] public decimal? PrecioMin { get; set; }
-        [BindProperty(SupportsGet = true)] public decimal? PrecioMax { get; set; }
-
-        // 🔹 Datos cargados
-        public List<Producto> Productos { get; set; } = new();
-        public List<Categoria> Categorias { get; set; } = new();
-
+        // 🚀 Se ejecuta al cargar la página
         public async Task OnGetAsync()
         {
-            // 1️⃣ Traer categorías
-            Categorias = await _context.Categorias.AsNoTracking().ToListAsync();
+            // 🔹 Cargar categorías
+            Categorias = await _context.Categorias.ToListAsync();
 
-            // 2️⃣ Crear la consulta base
+            // 🔹 Base query de productos
             var query = _context.Productos
                 .Include(p => p.Categoria)
-                .Where(p => p.EstaActivo)
                 .AsQueryable();
 
-            // 3️⃣ Aplicar filtros dinámicos
-            if (!string.IsNullOrWhiteSpace(BuscarNombre))
-                query = query.Where(p => p.Nombre.Contains(BuscarNombre));
+            // 🔹 Aplicar filtros dinámicos
+            if (!string.IsNullOrWhiteSpace(NombreFiltro))
+                query = query.Where(p => p.Nombre.Contains(NombreFiltro));
 
-            if (CategoriaId.HasValue)
-                query = query.Where(p => p.CategoriaId == CategoriaId.Value);
+            if (CategoriaIdFiltro.HasValue)
+                query = query.Where(p => p.CategoriaId == CategoriaIdFiltro.Value);
 
-            if (PrecioMin.HasValue)
-                query = query.Where(p => p.Precio >= PrecioMin.Value);
+            if (PrecioMinFiltro.HasValue && PrecioMinFiltro.Value > 0)
+                query = query.Where(p => p.Precio >= PrecioMinFiltro.Value);
 
-            if (PrecioMax.HasValue && PrecioMax > 0)
-                query = query.Where(p => p.Precio <= PrecioMax.Value);
+            if (PrecioMaxFiltro.HasValue && PrecioMaxFiltro.Value > 0)
+                query = query.Where(p => p.Precio <= PrecioMaxFiltro.Value);
 
-            // 4️⃣ Ejecutar la consulta
-            Productos = await query
-                .OrderBy(p => p.Nombre)
-                .ToListAsync();
+            // 🔹 Ejecutar y guardar resultado
+            Productos = await query.ToListAsync();
         }
     }
 }

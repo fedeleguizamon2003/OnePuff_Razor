@@ -1,81 +1,140 @@
 ﻿@page
 @model OnePuff_Razor.Pages.Productos.ClienteModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
 @{
     ViewData["Title"] = "Catálogo de Productos";
+    Layout = "_Layout";
 }
 
-<!-- 🔹 Encabezado -->
-<div class="text-center mb-4">
-    <h2 class="fw-bold">🛒 Catálogo de Productos</h2>
-    <p class="text-muted">Filtrá los productos por nombre, categoría o precio.</p>
-</div>
+<!-- 🧭 Título principal -->
+<h2 class="text-center my-4">
+    🛍️ Catálogo de Productos
+</h2>
 
-<!-- 🔹 Formulario de filtros -->
-<form method="get" class="row g-3 align-items-end mb-4 bg-light p-3 rounded shadow-sm">
-    <div class="col-md-4">
-        <label class="form-label fw-semibold">Buscar por nombre</label>
-        <input type="text" name="BuscarNombre" value="@Model.BuscarNombre" class="form-control" placeholder="Ej: arroz, gaseosa..." />
-    </div>
+<p class="text-center text-muted mb-4">
+    Filtrá los productos por nombre, categoría o precio.
+</p>
 
-    <div class="col-md-3">
-        <label class="form-label fw-semibold">Categoría</label>
-        <select name="CategoriaId" class="form-select">
-            <option value="">Todas</option>
-            @foreach (var cat in Model.Categorias)
-            {
-                <option value="@cat.CategoriaId" selected="@(cat.CategoriaId == Model.CategoriaId)">
-                    @cat.Nombre
-                </option>
-            }
-        </select>
-    </div>
+<!-- 🔍 FORMULARIO DE FILTROS -->
+<form method="get" class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
+    <!-- Campo de búsqueda por nombre -->
+    <input type="text" name="nombre" value="@Model.NombreFiltro" class="form-control w-25" placeholder="Ej: arroz, gaseosa..." />
 
-    <div class="col-md-2">
-        <label class="form-label fw-semibold">Desde ($)</label>
-        <input type="number" name="PrecioMin" value="@(Model.PrecioMin ?? 0)" class="form-control" min="0" />
-    </div>
+    <!-- Filtro por categoría -->
+    <select name="categoriaId" class="form-select w-25">
+        <option value="">Todas</option>
+        @foreach (var categoria in Model.Categorias)
+        {
+            <option value="@categoria.CategoriaId" selected="@(Model.CategoriaIdFiltro == categoria.CategoriaId)">
+                @categoria.Nombre
+            </option>
+        }
+    </select>
 
-    <div class="col-md-2">
-        <label class="form-label fw-semibold">Hasta ($)</label>
-        <input type="number" name="PrecioMax" value="@(Model.PrecioMax ?? 0)" class="form-control" min="0" />
-    </div>
+    <!-- Filtros por precio -->
+    <input type="number" name="precioMin" value="@Model.PrecioMinFiltro" class="form-control w-25" placeholder="Desde ($)" />
+    <input type="number" name="precioMax" value="@Model.PrecioMaxFiltro" class="form-control w-25" placeholder="Hasta ($)" />
 
-    <div class="col-md-1 text-end">
-        <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-search"></i> Filtrar
-        </button>
-    </div>
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-search"></i> Filtrar
+    </button>
 </form>
 
-<!-- 🔹 Resultados -->
-@if (Model.Productos.Any())
-{
-    <div class="row">
-        @foreach (var p in Model.Productos)
+<!-- 🧱 LISTADO DE PRODUCTOS -->
+<div class="d-flex flex-wrap justify-content-center">
+    @if (Model.Productos.Any())
+    {
+        @foreach (var producto in Model.Productos)
         {
-            <div class="col-md-4 col-lg-3 mb-4">
-                <div class="card h-100 shadow-sm border-0">
-                    <!-- Imagen del producto -->
-                    <img src="@(p.UrlImagen ?? "/images/default-product.jpg")"
-                         class="card-img-top"
-                         alt="@p.Nombre"
-                         style="height: 180px; object-fit: cover;" />
+            <div class="card m-3 shadow-sm" style="width: 16rem;">
+                <img src="@producto.UrlImagen" class="card-img-top" alt="@producto.Nombre" />
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-bold">@producto.Nombre</h5>
+                    <p class="text-muted">@producto.Categoria?.Nombre</p>
+                    <p class="text-success fw-bold">💲@producto.Precio.ToString("N2")</p>
+                    <p class="text-muted">Stock: @producto.Stock unidades</p>
 
-                    <div class="card-body text-center">
-                        <h5 class="card-title fw-bold">@p.Nombre</h5>
-                        <p class="text-muted mb-1">@p.Categoria?.Nombre</p>
-                        <p class="fw-semibold text-success fs-5">$@p.Precio</p>
-                        <small class="text-muted">Stock: @p.Stock unidades</small>
-                    </div>
+                    <!-- 🛒 BOTÓN: Agregar producto al carrito -->
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            onclick="agregarAlCarrito(@producto.ProductoId)">
+                        🛒 Agregar
+                    </button>
                 </div>
             </div>
         }
+    }
+    else
+    {
+        <p class="text-center text-muted">No se encontraron productos.</p>
+    }
+</div>
+
+<!-- 🪟 MODAL: Vista rápida del carrito -->
+<div class="modal fade" id="modalCarrito" tabindex="-1" aria-labelledby="modalCarritoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalCarritoLabel">🛍️ Tu Carrito</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="contenidoCarrito">
+                <p class="text-muted">Cargando...</p>
+            </div>
+            <div class="modal-footer">
+                <a href="/Carrito" class="btn btn-success">Finalizar compra</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Seguir comprando</button>
+            </div>
+        </div>
     </div>
+</div>
+<input type="hidden" id="af-token" value="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+
+
+<!-- 🧠 SCRIPTS: manejo de carrito -->
+@section Scripts {
+    <script>
+        // 🧩 Agrega el producto al carrito usando fetch (sin recargar la página)
+                async function agregarAlCarrito(productoId) {
+            try {
+                const token = document.getElementById('af-token').value;
+
+                const respuesta = await fetch(`/Carrito?handler=Agregar&productoId=${productoId}`, {
+                    method: 'POST',
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",            // para que el backend detecte AJAX
+                        "RequestVerificationToken": token                 // 🔒 token anti-CSRF
+                    }
+                });
+
+                if (respuesta.ok) {
+                    await actualizarCarrito();
+                    const modal = new bootstrap.Modal(document.getElementById('modalCarrito'));
+                    modal.show();
+                } else {
+                    const errorText = await respuesta.text();
+                    alert("❌ No se pudo agregar el producto al carrito.\n\n" + errorText);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("⚠️ Error al intentar agregar el producto.");
+            }
+        }
+
+
+        // 🔁 Carga o refresca el contenido HTML del carrito dentro del modal
+        async function actualizarCarrito() {
+            try {
+                // Pide la vista parcial del carrito (Resumen)
+                const resp = await fetch('/Carrito/Resumen');
+                const html = await resp.text();
+
+                // Inserta el HTML recibido en el cuerpo del modal
+                document.getElementById('contenidoCarrito').innerHTML = html;
+            } catch (error) {
+                console.error("Error al actualizar el carrito:", error);
+            }
+        }
+    </script>
 }
-else
-{
-    <div class="alert alert-warning text-center">
-        😕 No se encontraron productos que coincidan con los filtros seleccionados.
-    </div>
-}
-S

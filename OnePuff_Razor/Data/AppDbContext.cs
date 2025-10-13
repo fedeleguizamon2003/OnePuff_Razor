@@ -13,6 +13,13 @@ namespace OnePuff_Razor.Data
         public DbSet<Usuario> Usuarios { get; set; } = default!;
         public DbSet<Direccion> Direcciones { get; set; } = default!;
 
+        public DbSet<Cliente> Clientes { get; set; } = default!;
+        public DbSet<Carrito> Carritos { get; set; } = default!;
+        public DbSet<CarritoItem> CarritoItems { get; set; } = default!;
+        public DbSet<Pedido> Pedidos { get; set; } = default!;
+        public DbSet<PedidoDetalle> PedidoDetalles { get; set; } = default!;
+
+
         protected override void OnModelCreating(ModelBuilder mb)
         {
             // tipo decimal para SQL Server
@@ -34,6 +41,29 @@ namespace OnePuff_Razor.Data
              .WithOne(d => d.Usuario)
              .HasForeignKey<Direccion>(d => d.UsuarioId)
              .OnDelete(DeleteBehavior.Cascade);
+
+            // Cliente 1:1 Usuario
+            mb.Entity<Cliente>()
+                .HasOne(c => c.Usuario)
+                .WithOne()
+                .HasForeignKey<Cliente>(c => c.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Carrito 1:N CarritoItems
+            mb.Entity<Carrito>()
+                .HasMany(c => c.Items)
+                .WithOne(i => i.Carrito)
+                .HasForeignKey(i => i.CarritoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Pedido 1:N PedidoDetalles
+            mb.Entity<Pedido>()
+                .HasMany(p => p.Detalles)
+                .WithOne(d => d.Pedido)
+                .HasForeignKey(d => d.PedidoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
         }
     }
 }
