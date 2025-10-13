@@ -1,19 +1,19 @@
 ﻿@page
 @model OnePuff_Razor.Pages.Carrito.ResumenModel
 @{
-    Layout = null;  // 🔹 Importante: no usamos el layout principal, es un fragmento
+    Layout = null; // Fragmento para el modal
 }
 
-@if (Model.CarritoActual.Items.Any())
+@if (Model.CarritoActual != null && Model.CarritoActual.Items.Any())
 {
     <table class="table table-striped align-middle">
         <thead class="table-light">
             <tr>
                 <th>Producto</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-end">Precio</th>
-                <th class="text-end">Subtotal</th>
-                <th></th>
+                <th class="text-center" style="width:110px;">Cantidad</th>
+                <th class="text-end" style="width:120px;">Precio</th>
+                <th class="text-end" style="width:120px;">Subtotal</th>
+                <th style="width:70px;"></th>
             </tr>
         </thead>
         <tbody>
@@ -21,21 +21,28 @@
             {
                 <tr>
                     <td>@item.Producto.Nombre</td>
-                    <td class="text-center">@item.Cantidad</td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-secondary" onclick="carrito.quitar(@item.ProductoId)">–</button>
+                            <span class="btn btn-light disabled">@item.Cantidad</span>
+                            <button class="btn btn-outline-secondary" onclick="carrito.agregar(@item.ProductoId)">+</button>
+                        </div>
+                    </td>
                     <td class="text-end">$@item.PrecioUnitarioSnapshot.ToString("N2")</td>
-                    <td class="text-end">$@(item.PrecioUnitarioSnapshot* item.Cantidad).ToString("N2")</td>
+                    <td class="text-end">$@((item.PrecioUnitarioSnapshot * item.Cantidad).ToString("N2"))</td>
                     <td class="text-end">
-                        <form method="post" asp-page="/Carrito/Index" asp-page-handler="Eliminar" asp-route-productoId="@item.ProductoId">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">🗑</button>
-                        </form>
+                        <button class="btn btn-sm btn-outline-danger" onclick="carrito.eliminar(@item.ProductoId)">🗑</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 
-    <div class="text-end mt-3">
-        <h5>Total: 💲@Model.CarritoActual.Items.Sum(i => i.PrecioUnitarioSnapshot * i.Cantidad).ToString("N2")</h5>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <button class="btn btn-outline-danger" onclick="carrito.vaciar()">Vaciar carrito</button>
+        <h5 class="mb-0">
+            Total: 💲@Model.CarritoActual.Items.Sum(i => i.PrecioUnitarioSnapshot * i.Cantidad).ToString("N2")
+        </h5>
     </div>
 }
 else

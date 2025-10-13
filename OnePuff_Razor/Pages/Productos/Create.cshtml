@@ -36,9 +36,20 @@
 
     <div class="mb-3">
         <label class="form-label">Categoría</label>
-        <!-- 🔹 OJO: asp-items usa Model.CategoriasSelectList -->
         <select asp-for="Producto.CategoriaId" asp-items="Model.CategoriasSelectList" class="form-select"></select>
         <span asp-validation-for="Producto.CategoriaId" class="text-danger"></span>
+    </div>
+
+    <!-- 🖼️ Campo para URL de imagen -->
+    <div class="mb-3">
+        <label class="form-label">URL de Imagen</label>
+        <input asp-for="Producto.UrlImagen" class="form-control" placeholder="https://..." oninput="previewImagen(this.value)" />
+        <span asp-validation-for="Producto.UrlImagen" class="text-danger"></span>
+    </div>
+
+    <!-- Vista previa -->
+    <div id="preview-container" class="text-center mb-3 d-none">
+        <img id="preview-img" src="" class="img-thumbnail" style="max-width:200px;" alt="Vista previa" />
     </div>
 
     <div class="form-check mb-3">
@@ -54,4 +65,16 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImagen(url) {
+            const img = document.getElementById('preview-img');
+            const container = document.getElementById('preview-container');
+            if (url && url.startsWith('http')) {
+                img.src = url;
+                container.classList.remove('d-none');
+            } else {
+                container.classList.add('d-none');
+            }
+        }
+    </script>
 }

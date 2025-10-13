@@ -84,6 +84,16 @@
                                 (@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)
                             </span>
 
+                            <!-- 🛒 Carrito visual -->
+                            <a class="nav-link position-relative me-3" href="/Carrito" title="Ver carrito">
+                                🛒
+                                <span id="cart-badge"
+                                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    0
+                                </span>
+                            </a>
+
+
                             <!-- 🚪 Botón para cerrar sesión -->
                             <a asp-page="/Usuarios/Logout" class="btn btn-outline-danger btn-sm">
                                 Cerrar sesión

@@ -8,6 +8,7 @@ using CarritoEntity = OnePuff_Razor.Models.Carrito;
 
 namespace OnePuff_Razor.Pages.Carrito
 {
+    [IgnoreAntiforgeryToken] // Para peticiones AJAX
     public class IndexModel : PageModel
     {
         private readonly CarritoService _carritoService;
@@ -19,26 +20,20 @@ namespace OnePuff_Razor.Pages.Carrito
             _context = context;
         }
 
-        // Carrito renderizado en la vista
         public CarritoEntity CarritoActual { get; set; } = new();
 
-        // 🔎 Obtiene el ClienteId del usuario logueado; si no existe, lo crea
+        // ✅ Obtiene o crea el Cliente vinculado al usuario logueado
         private async Task<int> GetOrCreateClienteIdAsync()
         {
-            // El Login ya guarda el UsuarioId en el claim NameIdentifier
             var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrWhiteSpace(usuarioIdClaim))
                 throw new InvalidOperationException("No se encontró el UsuarioId en los claims.");
 
             int usuarioId = int.Parse(usuarioIdClaim);
 
-            // ¿Existe Cliente para este Usuario?
-            var cliente = await _context.Clientes
-                .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
-
+            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
             if (cliente == null)
             {
-                // Lo creamos con datos mínimos (teléfono opcional)
                 cliente = new OnePuff_Razor.Models.Cliente
                 {
                     UsuarioId = usuarioId,
@@ -51,55 +46,52 @@ namespace OnePuff_Razor.Pages.Carrito
             return cliente.ClienteId;
         }
 
-        public async Task OnGet()
+        // 🧭 Carga el carrito actual
+        public async Task OnGetAsync()
         {
             var clienteId = await GetOrCreateClienteIdAsync();
             CarritoActual = await _carritoService.GetCarritoConItems(clienteId);
         }
 
-        public async Task<IActionResult> OnPostAgregar(int productoId)
+        // 🛒 Agregar producto
+        public async Task<IActionResult> OnPostAgregarAsync(int productoId)
         {
-            try
-            {
-                var clienteId = await GetOrCreateClienteIdAsync();
-                await _carritoService.AddItemAsync(clienteId, productoId);
-
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return new JsonResult(new { success = true });
-
-                return RedirectToPage();
-            }
-            catch (DbUpdateException dbex)
-            {
-                // Devuelve la inner exception para ver el FK exacto que falla
-                var inner = dbex.InnerException?.Message ?? dbex.Message;
-                return BadRequest(new { error = inner });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            var clienteId = await GetOrCreateClienteIdAsync();
+            await _carritoService.AddItemAsync(clienteId, productoId);
+            return new JsonResult(new { success = true });
         }
 
+        // ➖ Quitar una unidad
         public async Task<IActionResult> OnPostQuitarAsync(int productoId)
         {
             var clienteId = await GetOrCreateClienteIdAsync();
             await _carritoService.RemoveOneAsync(clienteId, productoId);
-            return RedirectToPage();
+            return new JsonResult(new { success = true });
         }
 
+        // 🗑️ Eliminar producto
         public async Task<IActionResult> OnPostEliminarAsync(int productoId)
         {
             var clienteId = await GetOrCreateClienteIdAsync();
             await _carritoService.RemoveItemAsync(clienteId, productoId);
-            return RedirectToPage();
+            return new JsonResult(new { success = true });
         }
 
+        // 🧹 Vaciar carrito
         public async Task<IActionResult> OnPostVaciarAsync()
         {
             var clienteId = await GetOrCreateClienteIdAsync();
             await _carritoService.EmptyAsync(clienteId);
-            return RedirectToPage();
+            return new JsonResult(new { success = true });
+        }
+
+        // 🔢 Cantidad total para el badge del header
+        public async Task<IActionResult> OnGetCountAsync()
+        {
+            var clienteId = await GetOrCreateClienteIdAsync();
+            var carrito = await _carritoService.GetCarritoConItems(clienteId);
+            var count = carrito.Items?.Sum(i => i.Cantidad) ?? 0;
+            return new JsonResult(new { count });
         }
     }
 }

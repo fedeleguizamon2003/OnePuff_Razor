@@ -1,18 +1,23 @@
 ﻿@page
 @model OnePuff_Razor.Pages.Carrito.IndexModel
 
-<h2>Carrito de Compras</h2>
+@{
+    ViewData["Title"] = "Carrito de Compras";
+    Layout = "_Layout";
+}
+
+<h2 class="my-4 text-center">🛒 Carrito de Compras</h2>
 
 @if (Model.CarritoActual != null && Model.CarritoActual.Items != null && Model.CarritoActual.Items.Any())
 {
-    <table class="table table-striped">
-        <thead>
+    <table class="table table-striped align-middle">
+        <thead class="table-light">
             <tr>
                 <th>Producto</th>
-                <th>Precio</th>
-                <th>Cantidad</th>
-                <th>Subtotal</th>
-                <th>Acciones</th>
+                <th class="text-end">Precio</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-end">Subtotal</th>
+                <th class="text-center">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -20,30 +25,107 @@
             {
                 <tr>
                     <td>@item.Producto.Nombre</td>
-                    <td>$@item.PrecioUnitarioSnapshot</td>
-                    <td>@item.Cantidad</td>
-                    <td>$@(item.PrecioUnitarioSnapshot* item.Cantidad)</td>
-                    <td class="d-flex gap-1">
-                        <form method="post" asp-page-handler="Quitar" asp-route-productoId="@item.ProductoId">
-                            <button class="btn btn-sm btn-warning">-</button>
-                        </form>
-                        <form method="post" asp-page-handler="Agregar" asp-route-productoId="@item.ProductoId">
-                            <button class="btn btn-sm btn-success">+</button>
-                        </form>
-                        <form method="post" asp-page-handler="Eliminar" asp-route-productoId="@item.ProductoId">
-                            <button class="btn btn-sm btn-danger">Eliminar</button>
-                        </form>
+                    <td class="text-end">$@item.PrecioUnitarioSnapshot.ToString("N2")</td>
+                    <td class="text-center">@item.Cantidad</td>
+                    <td class="text-end">$@((item.PrecioUnitarioSnapshot * item.Cantidad).ToString("N2"))</td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-warning" onclick="carrito.quitar(@item.ProductoId)">–</button>
+                            <button class="btn btn-outline-success" onclick="carrito.agregar(@item.ProductoId)">+</button>
+                            <button class="btn btn-outline-danger" onclick="carrito.eliminar(@item.ProductoId)">Eliminar</button>
+                        </div>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 
-    <form method="post" asp-page-handler="Vaciar">
-        <button class="btn btn-danger">Vaciar carrito</button>
-    </form>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="d-flex gap-2">
+            <button class="btn btn-danger" onclick="carrito.vaciar()">🗑 Vaciar carrito</button>
+            <!-- 💳 Botón solo visual -->
+            <button type="button" class="btn btn-success">💳 Finalizar compra</button>
+        </div>
+
+        <h4 class="mb-0">
+            Total: <span class="text-success fw-bold">💲@Model.CarritoActual.Items.Sum(i => i.PrecioUnitarioSnapshot * i.Cantidad).ToString("N2")</span>
+        </h4>
+    </div>
+
 }
 else
 {
-    <p>Tu carrito está vacío.</p>
+    <div class="text-center text-muted mt-5">
+        <p>Tu carrito está vacío 🛒</p>
+        <a href="/Productos/Cliente" class="btn btn-primary mt-2">Ver productos</a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // 🔄 Refresca el contenido del carrito dinámicamente
+        async function actualizarVistaCarrito(){
+            try {
+                const r = await fetch('/Carrito');
+                const html = await r.text();
+
+                // Reemplaza solo el contenido dentro del <main>
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
+                const nuevoMain = doc.querySelector("main").innerHTML;
+                document.querySelector("main").innerHTML = nuevoMain;
+
+                await actualizarBadgeCarrito();
+            } catch (err) {
+                console.error("Error al actualizar vista:", err);
+            }
+        }
+
+        // 🛍️ Actualiza el número de ítems en el icono del header
+        async function actualizarBadgeCarrito(){
+            try {
+                const r = await fetch('/Carrito?handler=Count', {
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+                if (!r.ok) return;
+                const d = await r.json();
+                document.getElementById('cart-badge').textContent = d.count ?? 0;
+            } catch {}
+        }
+
+        // ⚙️ Acciones del carrito (AJAX)
+        window.carrito = {
+            async agregar(id){ await accion('Agregar', id); },
+            async quitar(id){ await accion('Quitar', id); },
+            async eliminar(id){ await accion('Eliminar', id); },
+            async vaciar(){ await accion('Vaciar'); }
+        };
+
+        // 🔧 Lógica común para manejar fetch hacia el backend
+        async function accion(handler, productoId = null){
+            try {
+                const qs = new URLSearchParams();
+                qs.set('handler', handler);
+                if (productoId !== null) qs.set('productoId', productoId);
+
+                const r = await fetch(`/Carrito?${qs}`, {
+                    method: 'POST',
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+
+                if (!r.ok) {
+                    const t = await r.text();
+                    alert("❌ Error al operar el carrito\n\n" + t);
+                    return;
+                }
+
+                await actualizarVistaCarrito();
+            } catch (e) {
+                console.error("Error al ejecutar acción del carrito:", e);
+            }
+        }
+
+        // Inicializa el badge al cargar la página
+        document.addEventListener('DOMContentLoaded', actualizarBadgeCarrito);
+    </script>
 }
