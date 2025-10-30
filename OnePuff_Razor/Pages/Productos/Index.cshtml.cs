@@ -16,12 +16,12 @@ namespace OnePuff_Razor.Pages.Productos
             _context = context;
         }
 
-        // 👇 Lista de productos que mostraremos en la vista
+        // Lista de productos que mostraremos en la vista
         public IList<Producto> Productos { get; set; } = default!;
 
         public async Task OnGetAsync()
         {
-            // 👇 Incluimos la relación con Categoría para mostrar su nombre
+            //  Incluimos la relación con Categoría para mostrar su nombre
             Productos = await _context.Productos
                 .Include(p => p.Categoria)
                 .ToListAsync();

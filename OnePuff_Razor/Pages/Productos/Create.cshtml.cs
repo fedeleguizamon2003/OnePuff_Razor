@@ -15,7 +15,7 @@ namespace OnePuff_Razor.Pages.Productos
         [BindProperty]
         public Producto Producto { get; set; } = new Producto();
 
-        // 🔹 Fuente de datos para el <select> de Categorías
+        //  Fuente de datos para el <select> de Categorías
         public SelectList CategoriasSelectList { get; set; } = default!;
 
         public void OnGet()
@@ -32,7 +32,7 @@ namespace OnePuff_Razor.Pages.Productos
             if (!ModelState.IsValid)
                 return Page();
 
-            // 🔎 Validación: evitar duplicados por categoría (Nombre + CategoriaId)
+            //  Validación: evitar duplicados por categoría (Nombre + CategoriaId)
             var nombre = (Producto.Nombre ?? string.Empty).Trim().ToLower();
             bool existe = _context.Productos.Any(p =>
                 p.CategoriaId == Producto.CategoriaId &&

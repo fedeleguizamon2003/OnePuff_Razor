@@ -11,24 +11,24 @@
 </h1>
 
 <form method="post" class="border p-4 rounded shadow-sm">
-    <!-- 🔹 Muestra los errores de validación del servidor -->
+    <!--  Muestra los errores de validación del servidor -->
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <!-- 🔹 Campo Email -->
+    <!--  Campo Email -->
     <div class="mb-3">
         <label asp-for="Email" class="form-label">Email</label>
         <input asp-for="Email" class="form-control" placeholder="tuemail@ejemplo.com" />
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
-    <!-- 🔹 Campo Contraseña -->
+    <!--  Campo Contraseña -->
     <div class="mb-3">
         <label asp-for="Password" class="form-label">Contraseña</label>
         <input asp-for="Password" type="password" class="form-control" placeholder="********" />
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
 
-    <!-- 🔹 Botones -->
+    <!--  Botones -->
     <div class="d-flex justify-content-between align-items-center mt-4">
         <button type="submit" class="btn btn-primary">Ingresar</button>
         <a asp-page="/Usuarios/Register" class="btn btn-link">Crear una cuenta</a>

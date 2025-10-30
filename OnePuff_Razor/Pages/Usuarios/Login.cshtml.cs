@@ -40,14 +40,14 @@ namespace OnePuff_Razor.Pages.Usuarios
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // 🔹 Validación básica del formulario
+            //  Validación básica del formulario
             if (!ModelState.IsValid)
                 return Page();
 
-            // 🔹 Normalizamos el email para evitar problemas de mayúsculas/minúsculas
+            //  Normalizamos el email para evitar problemas de mayúsculas/minúsculas
             var emailNorm = Email.Trim().ToLower();
 
-            // 🔎 Buscamos el usuario
+            //  Buscamos el usuario
             var usuario = _context.Usuarios.FirstOrDefault(u => u.Email.ToLower() == emailNorm);
 
             if (usuario == null)
@@ -56,20 +56,20 @@ namespace OnePuff_Razor.Pages.Usuarios
                 return Page();
             }
 
-            // 🔐 Hasheamos la contraseña ingresada con SHA256
+            //  Hasheamos la contraseña ingresada con SHA256
             using var sha = SHA256.Create();
             var bytes = Encoding.UTF8.GetBytes(Password);
             var hash = sha.ComputeHash(bytes);
             var hashHex = BitConverter.ToString(hash).Replace("-", "").ToLower();
 
-            // ❌ Si el hash no coincide con el guardado en la BD
+            //  Si el hash no coincide con el guardado en la BD
             if (usuario.PasswordHash != hashHex)
             {
                 ModelState.AddModelError(string.Empty, "Credenciales inválidas.");
                 return Page();
             }
 
-            // ✅ Autenticación correcta → crear identidad y cookie
+            //  Autenticación correcta → crear identidad y cookie
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, usuario.Nombre),
@@ -80,7 +80,7 @@ namespace OnePuff_Razor.Pages.Usuarios
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            // 🔹 Configuración de la cookie (válida por 60 min)
+            //  Configuración de la cookie (válida por 60 min)
             var authProperties = new AuthenticationProperties
             {
                 IsPersistent = true,
@@ -93,18 +93,18 @@ namespace OnePuff_Razor.Pages.Usuarios
                 authProperties
             );
 
-            // 🔀 Redirección según el rol
+            // Redirección según el rol
             if (usuario.Rol == "Administrador")
                 return RedirectToPage("/Productos/Admin");
 
             if (usuario.Rol == "Cliente")
                 return RedirectToPage("/Productos/Cliente");
 
-            // 🔁 Si no hay rol definido, vuelve al inicio
+            //  Si no hay rol definido, vuelve al inicio
             return RedirectToPage("/Index");
         }
 
-        // 🚪 Cerrar sesión (lo llamás desde Logout.cshtml.cs)
+        //  Cerrar sesión (lo llamás desde Logout.cshtml.cs)
         public async Task<IActionResult> OnPostLogoutAsync()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

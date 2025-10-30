@@ -22,22 +22,22 @@ namespace OnePuff_Razor.Pages.Usuarios
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // 1️⃣ Validar contraseña del formulario
+            // 1️ Validar contraseña del formulario
             if (string.IsNullOrWhiteSpace(Password))
                 ModelState.AddModelError(nameof(Password), "La contraseña es obligatoria.");
 
-            // 2️⃣ Normalizar datos básicos
+            // 2️ Normalizar datos básicos
             Usuario.Dni = Usuario.Dni?.Trim();
             Usuario.Email = Usuario.Email?.Trim().ToLower();
 
-            // 3️⃣ Validar duplicados
+            // 3️ Validar duplicados
             if (_context.Usuarios.Any(u => u.Dni == Usuario.Dni))
                 ModelState.AddModelError("Usuario.Dni", "Ya existe un usuario registrado con ese DNI.");
             if (_context.Usuarios.Any(u => u.Email == Usuario.Email))
                 ModelState.AddModelError("Usuario.Email", "Ya existe una cuenta con este correo electrónico.");
 
-            // 4️⃣ Si hay errores, volvemos (ignorando PasswordHash por ahora)
-            // 👉 Removemos el campo de la validación temporalmente
+            // 4️ Si hay errores, volvemos (ignorando PasswordHash por ahora)
+            //  Removemos el campo de la validación temporalmente
             ModelState.Remove("Usuario.PasswordHash");
 
             if (!ModelState.IsValid)
@@ -49,7 +49,7 @@ namespace OnePuff_Razor.Pages.Usuarios
                 return Page();
             }
 
-            // 5️⃣ Hash de la contraseña
+            // 5️ Hash de la contraseña
             using (var sha = SHA256.Create())
             {
                 var bytes = Encoding.UTF8.GetBytes(Password);
@@ -57,14 +57,14 @@ namespace OnePuff_Razor.Pages.Usuarios
                 Usuario.PasswordHash = BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
 
-            // 6️⃣ Revalidamos solo el objeto Usuario (ahora con el hash cargado)
+            // 6️ Revalidamos solo el objeto Usuario (ahora con el hash cargado)
             TryValidateModel(Usuario, nameof(Usuario));
 
-            // 7️⃣ Guardamos usuario
+            // 7️ Guardamos usuario
             _context.Usuarios.Add(Usuario);
             await _context.SaveChangesAsync();
 
-            // 8️⃣ Si es cliente, guardar dirección vinculada
+            // 8️ Si es cliente, guardar dirección vinculada
             if (Usuario.Rol == "Cliente")
             {
                 Direccion.UsuarioId = Usuario.UsuarioId;

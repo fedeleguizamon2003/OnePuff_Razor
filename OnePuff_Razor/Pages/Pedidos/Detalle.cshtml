@@ -1,0 +1,46 @@
+﻿@page
+@model OnePuff_Razor.Pages.Pedidos.DetalleModel
+@{
+    ViewData["Title"] = "Detalle del Pedido";
+    Layout = "_Layout";
+}
+
+<h3 class="mb-3">Pedido #@Model.Pedido.PedidoId</h3>
+
+<div class="mb-2">
+    <b>Fecha:</b> @Model.Pedido.FechaPedido:g<br />
+    <b>Estado:</b> @Model.Pedido.Estado<br />
+    <b>Entrega:</b> @Model.Pedido.DireccionEntrega
+</div>
+
+<table class="table table-striped align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Producto</th>
+            <th class="text-center">Cant</th>
+            <th class="text-end">Precio</th>
+            <th class="text-end">Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model.Pedido.Detalles)
+        {
+            <tr>
+                <td>@(d.Producto?.Nombre ?? $"Producto #{d.ProductoId}")</td>
+                <td class="text-center">@d.Cantidad</td>
+                <td class="text-end">$ @d.PrecioUnitario.ToString("N2")</td>
+                <td class="text-end">$ @( (d.PrecioUnitario * d.Cantidad).ToString("N2") )</td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" class="text-end"><b>Total</b></td>
+            <td class="text-end"><b>$ @Model.Pedido.Total.ToString("N2")</b></td>
+        </tr>
+    </tfoot>
+</table>
+
+<div class="d-flex gap-2">
+    <a asp-page="/Productos/Cliente" class="btn btn-secondary">Seguir comprando</a>
+</div>

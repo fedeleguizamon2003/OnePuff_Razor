@@ -39,7 +39,7 @@ namespace OnePuff_Razor.Pages.Productos
             if (!ModelState.IsValid)
                 return Page();
 
-            // 🔎 Validación: duplicado dentro de la misma categoría, excluyéndome a mí
+            //  Validación: duplicado dentro de la misma categoría, excluyéndome a mí
             var nombre = (Producto.Nombre ?? string.Empty).Trim().ToLower();
             bool duplicado = await _context.Productos.AnyAsync(p =>
                 p.ProductoId != Producto.ProductoId &&

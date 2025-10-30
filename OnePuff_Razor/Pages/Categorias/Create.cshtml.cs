@@ -23,31 +23,31 @@ namespace OnePuff_Razor.Pages.Categorias
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // 🔹 Validación general del modelo
+            //  Validación general del modelo
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            // 🔹 Normalizamos el texto (para evitar que "Bebidas" y "bebidas" sean distintos)
+            //  Normalizamos el texto (para evitar que "Bebidas" y "bebidas" sean distintos)
             var nombreNormalizado = Categoria.Nombre.Trim().ToLower();
 
-            // 🔹 Validamos si ya existe una categoría con el mismo nombre
+            //  Validamos si ya existe una categoría con el mismo nombre
             bool existe = _context.Categorias
                 .Any(c => c.Nombre.ToLower() == nombreNormalizado);
 
             if (existe)
             {
-                // 🔸 Agregamos un error al modelo y no guardamos
+                //  Agregamos un error al modelo y no guardamos
                 ModelState.AddModelError("Categoria.Nombre", "Ya existe una categoría con ese nombre.");
                 return Page();
             }
 
-            // 🔹 Si todo está bien, guardamos en la BD
+            //  Si todo está bien, guardamos en la BD
             _context.Categorias.Add(Categoria);
             await _context.SaveChangesAsync();
 
-            // 🔹 Redirige al listado o al panel del admin
+            //  Redirige al listado o al panel del admin
             return RedirectToPage("/Productos/Admin");
         }
     }

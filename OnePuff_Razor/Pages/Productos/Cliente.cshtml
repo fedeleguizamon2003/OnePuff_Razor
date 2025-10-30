@@ -12,7 +12,7 @@
     Filtrá los productos por nombre, categoría o precio.
 </p>
 
-<!-- 🔍 FORMULARIO DE FILTROS -->
+<!--  FORMULARIO DE FILTROS -->
 <form method="get" class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
     <input type="text" name="NombreFiltro" value="@Model.NombreFiltro" class="form-control w-25" placeholder="Ej: arroz, gaseosa..." />
 
@@ -34,7 +34,7 @@
     </button>
 </form>
 
-<!-- 🧱 LISTADO DE PRODUCTOS -->
+<!--  LISTADO DE PRODUCTOS -->
 <div class="d-flex flex-wrap justify-content-center">
     @if (Model.Productos.Any())
     {
@@ -113,7 +113,7 @@
                 await actualizarCarrito();
                 await actualizarBadgeCarrito();
 
-                // ✅ Evita crear múltiples modales superpuestos
+                //  Evita crear múltiples modales superpuestos
                 if (handler === 'Agregar') {
                     const modalEl = document.getElementById('modalCarrito');
                     const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
@@ -137,7 +137,7 @@
             document.getElementById('cart-badge').textContent = d.count ?? 0;
         }
 
-        // ✅ Limpieza de backdrop y scroll al cerrar el modal
+        //  Limpieza de backdrop y scroll al cerrar el modal
         document.getElementById('modalCarrito').addEventListener('hidden.bs.modal', () => {
             const backdrop = document.querySelector('.modal-backdrop');
             if (backdrop) backdrop.remove();

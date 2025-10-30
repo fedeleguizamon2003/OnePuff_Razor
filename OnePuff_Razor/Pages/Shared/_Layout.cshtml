@@ -70,6 +70,31 @@
                                 <a class="nav-link text-dark" asp-page="/Usuarios/Login">Productos</a>
                             </li>
                         }
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            var rol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+                            if (rol == "Administrador")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-page="/Productos/Admin">Gestión de Productos</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-page="/Pedidos/Admin">Pedidos</a>
+                                </li>
+                            }
+                            else if (rol == "Cliente")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-page="/Productos/Cliente">Productos</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-page="/Pedidos/Cliente">Mis pedidos</a>
+                                </li>
+                            }
+                        }
+
+
                     </ul>
 
                     @* ======================================================

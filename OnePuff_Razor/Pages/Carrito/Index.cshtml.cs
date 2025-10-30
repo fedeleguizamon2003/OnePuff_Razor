@@ -19,10 +19,39 @@ namespace OnePuff_Razor.Pages.Carrito
             _carritoService = carritoService;
             _context = context;
         }
+        // POST /Carrito?handler=Finalizar
+        public async Task<IActionResult> OnPostFinalizarAsync(
+            [FromServices] PedidoService pedidoService,
+            [FromServices] EmailService emailService)
+        {
+            // 1) Obtener ClienteId del usuario logueado (ya tenés este método en la página)
+            var clienteId = await GetOrCreateClienteIdAsync();
 
+            // 2) Crear pedido desde el carrito
+            var pedido = await pedidoService.CrearDesdeCarritoAsync(clienteId);
+
+            // 3) Enviar ticket por mail (si el usuario tiene email)
+            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var usuario = await _context.Usuarios.FindAsync(usuarioId);
+
+            if (!string.IsNullOrWhiteSpace(usuario?.Email))
+            {
+                try
+                {
+                    await emailService.EnviarTicketAsync(usuario.Email, pedido);
+                }
+                catch
+                {
+                    // Podés loguear el error si agregás logger; no frenamos la compra por un problema de email.
+                }
+            }
+
+            // 4) Responder al fetch
+            return new JsonResult(new { success = true, pedidoId = pedido.PedidoId });
+        }
         public CarritoEntity CarritoActual { get; set; } = new();
 
-        // ✅ Obtiene o crea el Cliente vinculado al usuario logueado
+        //  Obtiene o crea el Cliente vinculado al usuario logueado
         private async Task<int> GetOrCreateClienteIdAsync()
         {
             var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -46,14 +75,14 @@ namespace OnePuff_Razor.Pages.Carrito
             return cliente.ClienteId;
         }
 
-        // 🧭 Carga el carrito actual
+        //  Carga el carrito actual
         public async Task OnGetAsync()
         {
             var clienteId = await GetOrCreateClienteIdAsync();
             CarritoActual = await _carritoService.GetCarritoConItems(clienteId);
         }
 
-        // 🛒 Agregar producto
+        //  Agregar producto
         public async Task<IActionResult> OnPostAgregarAsync(int productoId)
         {
             var clienteId = await GetOrCreateClienteIdAsync();
@@ -61,7 +90,7 @@ namespace OnePuff_Razor.Pages.Carrito
             return new JsonResult(new { success = true });
         }
 
-        // ➖ Quitar una unidad
+        //  Quitar una unidad
         public async Task<IActionResult> OnPostQuitarAsync(int productoId)
         {
             var clienteId = await GetOrCreateClienteIdAsync();
@@ -69,7 +98,7 @@ namespace OnePuff_Razor.Pages.Carrito
             return new JsonResult(new { success = true });
         }
 
-        // 🗑️ Eliminar producto
+        //  Eliminar producto
         public async Task<IActionResult> OnPostEliminarAsync(int productoId)
         {
             var clienteId = await GetOrCreateClienteIdAsync();
@@ -77,7 +106,7 @@ namespace OnePuff_Razor.Pages.Carrito
             return new JsonResult(new { success = true });
         }
 
-        // 🧹 Vaciar carrito
+        //  Vaciar carrito
         public async Task<IActionResult> OnPostVaciarAsync()
         {
             var clienteId = await GetOrCreateClienteIdAsync();
@@ -85,7 +114,7 @@ namespace OnePuff_Razor.Pages.Carrito
             return new JsonResult(new { success = true });
         }
 
-        // 🔢 Cantidad total para el badge del header
+        //  Cantidad total para el badge del header
         public async Task<IActionResult> OnGetCountAsync()
         {
             var clienteId = await GetOrCreateClienteIdAsync();

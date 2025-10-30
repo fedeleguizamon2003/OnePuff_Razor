@@ -22,7 +22,7 @@ namespace OnePuff_Razor.Models
         [StringLength(20)]
         public string Dni { get; set; } = string.Empty;
 
-        // 🔐 Se guarda en BD. NO usar NotMapped acá.
+        //  Se guarda en BD. NO usar NotMapped acá.
         [Required, StringLength(100)]
         public string PasswordHash { get; set; } = string.Empty;
 

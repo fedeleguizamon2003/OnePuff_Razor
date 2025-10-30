@@ -10,11 +10,11 @@ namespace OnePuff_Razor.Pages.Productos
     {
         private readonly AppDbContext _context;
 
-        // 📋 Propiedades públicas accesibles desde la vista (.cshtml)
+        // Propiedades públicas accesibles desde la vista (.cshtml)
         public List<Producto> Productos { get; set; } = new();
         public List<Categoria> Categorias { get; set; } = new();
 
-        // 🧭 Filtros (inputs del formulario)
+        //  Filtros (inputs del formulario)
         [BindProperty(SupportsGet = true)]
         public string? NombreFiltro { get; set; }
 
@@ -32,18 +32,18 @@ namespace OnePuff_Razor.Pages.Productos
             _context = context;
         }
 
-        // 🚀 Se ejecuta al cargar la página
+        //  Se ejecuta al cargar la página
         public async Task OnGetAsync()
         {
-            // 🔹 Cargar categorías
+            //  Cargar categorías
             Categorias = await _context.Categorias.ToListAsync();
 
-            // 🔹 Base query de productos
+            //  Base query de productos
             var query = _context.Productos
                 .Include(p => p.Categoria)
                 .AsQueryable();
 
-            // 🔹 Aplicar filtros dinámicos
+            // 🔹Aplicar filtros dinámicos
             if (!string.IsNullOrWhiteSpace(NombreFiltro))
                 query = query.Where(p => p.Nombre.Contains(NombreFiltro));
 
@@ -56,7 +56,7 @@ namespace OnePuff_Razor.Pages.Productos
             if (PrecioMaxFiltro.HasValue && PrecioMaxFiltro.Value > 0)
                 query = query.Where(p => p.Precio <= PrecioMaxFiltro.Value);
 
-            // 🔹 Ejecutar y guardar resultado
+            //  Ejecutar y guardar resultado
             Productos = await query.ToListAsync();
         }
     }

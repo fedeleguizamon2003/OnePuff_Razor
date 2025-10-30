@@ -13,7 +13,7 @@ namespace OnePuff_Razor.Services
             _context = context;
         }
 
-        // ✅ Devuelve el carrito del cliente o lo crea si no existe
+        //  Devuelve el carrito del cliente o lo crea si no existe
         public async Task<Carrito> GetOrCreateAsync(int clienteId)
         {
             // Busca el carrito abierto del cliente
@@ -36,28 +36,28 @@ namespace OnePuff_Razor.Services
                 await _context.SaveChangesAsync();
             }
 
-            // 👈 Garantiza que siempre haya una lista de Items aunque venga vacía
+            //  Garantiza que siempre haya una lista de Items aunque venga vacía
             carrito.Items ??= new List<CarritoItem>();
             return carrito;
         }
 
-        // ✅ Agregar producto al carrito
+        //  Agregar producto al carrito
         public async Task AddItemAsync(int clienteId, int productoId, int cantidad = 1)
         {
             // Trae o crea el carrito del cliente
             var carrito = await GetOrCreateAsync(clienteId);
 
-            // 🔍 Busca el producto en la BD
+            //  Busca el producto en la BD
             var producto = await _context.Productos.FirstOrDefaultAsync(p => p.ProductoId == productoId);
             if (producto == null || !producto.EstaActivo)
                 throw new Exception($"❌ Producto con ID {productoId} no encontrado o inactivo.");
 
-            // 🔄 Busca si ya existe ese producto en el carrito
+            //  Busca si ya existe ese producto en el carrito
             var item = carrito.Items.FirstOrDefault(i => i.ProductoId == productoId);
 
             if (item == null)
             {
-                // ➕ Si no existe, lo agrega como nuevo ítem
+                //  Si no existe, lo agrega como nuevo ítem
                 item = new CarritoItem
                 {
                     CarritoId = carrito.CarritoId,
@@ -70,7 +70,7 @@ namespace OnePuff_Razor.Services
             }
             else
             {
-                // 🔁 Si ya estaba, aumenta la cantidad
+                // Si ya estaba, aumenta la cantidad
                 item.Cantidad += cantidad;
                 _context.CarritoItems.Update(item);
             }
@@ -78,7 +78,7 @@ namespace OnePuff_Razor.Services
             await _context.SaveChangesAsync();
         }
 
-        // ✅ Quitar una unidad
+        //  Quitar una unidad
         public async Task RemoveOneAsync(int clienteId, int productoId)
         {
             var carrito = await GetOrCreateAsync(clienteId);
@@ -96,7 +96,7 @@ namespace OnePuff_Razor.Services
             }
         }
 
-        // ✅ Eliminar el ítem completo
+        // Eliminar el ítem completo
         public async Task RemoveItemAsync(int clienteId, int productoId)
         {
             var carrito = await GetOrCreateAsync(clienteId);
@@ -109,7 +109,7 @@ namespace OnePuff_Razor.Services
             }
         }
 
-        // ✅ Vaciar carrito
+        //  Vaciar carrito
         public async Task EmptyAsync(int clienteId)
         {
             var carrito = await GetOrCreateAsync(clienteId);
@@ -117,7 +117,7 @@ namespace OnePuff_Razor.Services
             await _context.SaveChangesAsync();
         }
 
-        // ✅ Obtener carrito con productos (para mostrar en vista)
+        //  Obtener carrito con productos (para mostrar en vista)
         public async Task<Carrito> GetCarritoConItems(int clienteId)
         {
             var carrito = await _context.Carritos

@@ -1,0 +1,26 @@
+﻿@page
+@model OnePuff_Razor.Pages.Pedidos.AdminModel
+@{
+    ViewData["Title"] = "Pedidos (Admin)";
+    Layout = "_Layout";
+}
+<h3>Pedidos (ADMIN)</h3>
+
+<table class="table">
+    <thead class="table-light">
+        <tr><th>#</th><th>ClienteId</th><th>Fecha</th><th>Estado</th><th class="text-end">Total</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model.Pedidos)
+        {
+            <tr>
+                <td>@p.PedidoId</td>
+                <td>@p.ClienteId</td>
+                <td>@p.FechaPedido:g</td>
+                <td>@p.Estado</td>
+                <td class="text-end">$ @p.Total.ToString("N2")</td>
+                <td><a asp-page="/Pedidos/Detalle" asp-route-id="@p.PedidoId" class="btn btn-sm btn-outline-primary">Ver</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

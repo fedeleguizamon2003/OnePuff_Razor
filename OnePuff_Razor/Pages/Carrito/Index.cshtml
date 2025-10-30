@@ -43,8 +43,7 @@
     <div class="d-flex justify-content-between align-items-center mt-3">
         <div class="d-flex gap-2">
             <button class="btn btn-danger" onclick="carrito.vaciar()">🗑 Vaciar carrito</button>
-            <!-- 💳 Botón solo visual -->
-            <button type="button" class="btn btn-success">💳 Finalizar compra</button>
+            <button type="button" class="btn btn-success" onclick="carrito.finalizar()">💳 Finalizar compra</button>
         </div>
 
         <h4 class="mb-0">
@@ -69,7 +68,7 @@ else
                 const r = await fetch('/Carrito');
                 const html = await r.text();
 
-                // Reemplaza solo el contenido dentro del <main>
+                 // Reemplaza solo el contenido dentro del <main>
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, "text/html");
                 const nuevoMain = doc.querySelector("main").innerHTML;
@@ -98,7 +97,29 @@ else
             async agregar(id){ await accion('Agregar', id); },
             async quitar(id){ await accion('Quitar', id); },
             async eliminar(id){ await accion('Eliminar', id); },
-            async vaciar(){ await accion('Vaciar'); }
+            async vaciar(){ await accion('Vaciar'); },
+            async finalizar(){
+                if (!confirm("¿Confirmás la compra?")) return;
+
+                const qs = new URLSearchParams();
+                qs.set('handler', 'Finalizar');
+
+                const r = await fetch(`/Carrito?${qs}`, {
+                    method: 'POST',
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+
+                if (!r.ok) {
+                    const t = await r.text();
+                    alert("❌ No se pudo finalizar el pedido.\n\n" + t);
+                    return;
+                }
+
+                const data = await r.json();
+                alert(`✅ Pedido #${data.pedidoId} creado. Te enviamos el ticket por email.`);
+                // Si más adelante agregamos la página de detalle:
+                // window.location.href = `/Pedidos/Detalle?id=${data.pedidoId}`;
+            }
         };
 
         // 🔧 Lógica común para manejar fetch hacia el backend

@@ -5,11 +5,11 @@ using OnePuff_Razor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) DB
+// DB
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
-// 2) Cookies de autenticación
+// Auth cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -19,22 +19,30 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(2);
     });
 
-// 3) Autorización y convenciones
+// Policies
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", p => p.RequireRole("Administrador"));
     options.AddPolicy("ClienteOnly", p => p.RequireRole("Cliente"));
 });
 
+// Razor Pages + autorizaciones por página
 builder.Services.AddRazorPages(options =>
 {
-    // ❌ NO bloquear toda la carpeta /Productos como AdminOnly.
-    // ✅ Autorizar por página específica:
     options.Conventions.AuthorizePage("/Productos/Admin", "AdminOnly");
     options.Conventions.AuthorizePage("/Productos/Cliente", "ClienteOnly");
+    
+    
+     options.Conventions.AuthorizePage("/Pedidos/Cliente", "ClienteOnly");
+     options.Conventions.AuthorizePage("/Pedidos/Admin", "AdminOnly");
+     options.Conventions.AuthorizePage("/Pedidos/Detalle"); // cualquiera autenticado; la página valida propiedad
 });
-// 4) Servicios personalizados
-builder.Services.AddScoped<CarritoService>(); 
+
+// Servicios personalizados
+builder.Services.AddScoped<CarritoService>();
+builder.Services.AddScoped<PedidoService>();   // 👈 nuevo
+builder.Services.AddScoped<EmailService>();    // 👈 nuevo
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -47,7 +55,6 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// Orden correcto
 app.UseAuthentication();
 app.UseAuthorization();
 
