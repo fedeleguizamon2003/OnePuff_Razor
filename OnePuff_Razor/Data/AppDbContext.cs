@@ -24,6 +24,9 @@ namespace OnePuff_Razor.Data
         {
             // tipo decimal para SQL Server
             mb.Entity<Producto>().Property(p => p.Precio).HasColumnType("decimal(18,2)");
+            mb.Entity<CarritoItem>().Property(i => i.PrecioUnitarioSnapshot).HasColumnType("decimal(18,2)");
+            mb.Entity<Pedido>().Property(p => p.Total).HasColumnType("decimal(18,2)");
+            mb.Entity<PedidoDetalle>().Property(d => d.PrecioUnitario).HasColumnType("decimal(18,2)");
 
             // Seed mínimo (opcional)
             mb.Entity<Categoria>().HasData(

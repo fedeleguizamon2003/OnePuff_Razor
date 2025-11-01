@@ -136,7 +136,7 @@ namespace OnePuff_Razor.Pages.Usuarios
             // Guardar todo
             await _context.SaveChangesAsync();
 
-            TempData["PerfilOk"] = "? Datos actualizados correctamente.";
+            TempData["PerfilOk"] = " Datos actualizados correctamente.";
             return RedirectToPage(); // recarga la página para mostrar alerta
         }
     }

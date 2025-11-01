@@ -4,11 +4,24 @@
     ViewData["Title"] = "Pedidos (Admin)";
     Layout = "_Layout";
 }
-<h3>Pedidos (ADMIN)</h3>
 
-<table class="table">
+<h3 class="mb-3">📦 Pedidos (ADMIN)</h3>
+
+@if (TempData["PedidosMsg"] != null)
+{
+    <div class="alert alert-info">@Html.Raw(TempData["PedidosMsg"])</div>
+}
+
+<table class="table table-hover align-middle">
     <thead class="table-light">
-        <tr><th>#</th><th>ClienteId</th><th>Fecha</th><th>Estado</th><th class="text-end">Total</th><th></th></tr>
+        <tr>
+            <th>#</th>
+            <th>ClienteId</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th class="text-end">Total</th>
+            <th class="text-center" style="width:260px;">Acciones</th>
+        </tr>
     </thead>
     <tbody>
         @foreach (var p in Model.Pedidos)
@@ -16,10 +29,56 @@
             <tr>
                 <td>@p.PedidoId</td>
                 <td>@p.ClienteId</td>
-                <td>@p.FechaPedido:g</td>
-                <td>@p.Estado</td>
+                <td>
+                    @p.FechaPedido:g
+                    @if (p.FechaActualizacion.HasValue)
+                    {
+                        <div class="text-muted small">Act.: @p.FechaActualizacion.Value:g</div>
+                    }
+                </td>
+                <td>
+                    @* Badge por estado *@
+                    @switch (p.Estado)
+                    {
+                        case "Aprobado":
+                            <span class="badge bg-success">Aprobado</span>
+                            break;
+                        case "Rechazado":
+                            <span class="badge bg-danger">Rechazado</span>
+                            break;
+                        default:
+                            <span class="badge bg-secondary">Pendiente</span>
+                            break;
+                    }
+                </td>
                 <td class="text-end">$ @p.Total.ToString("N2")</td>
-                <td><a asp-page="/Pedidos/Detalle" asp-route-id="@p.PedidoId" class="btn btn-sm btn-outline-primary">Ver</a></td>
+                <td class="text-center">
+                    <a asp-page="/Pedidos/Detalle" asp-route-id="@p.PedidoId" class="btn btn-sm btn-outline-primary me-1">
+                        Ver
+                    </a>
+
+                    @* Botones solo si está pendiente *@
+                    @if (p.Estado == "Pendiente")
+                    {
+                        <form method="post" asp-page-handler="Aprobar" asp-route-id="@p.PedidoId" class="d-inline"
+                              onsubmit="return confirm('¿Aprobar el pedido #@p.PedidoId?');">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                ✅ Aprobar
+                            </button>
+                        </form>
+
+                        <form method="post" asp-page-handler="Rechazar" asp-route-id="@p.PedidoId" class="d-inline"
+                              onsubmit="return confirm('¿Rechazar el pedido #@p.PedidoId?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
+                                ❌ Rechazar
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="btn btn-sm btn-outline-secondary" disabled>Sin acciones</button>
+                    }
+                </td>
             </tr>
         }
     </tbody>

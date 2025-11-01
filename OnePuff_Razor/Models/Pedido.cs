@@ -10,10 +10,15 @@
         public DateTime FechaPedido { get; set; } = DateTime.Now;
         public string DireccionEntrega { get; set; } = string.Empty;
         public string TelefonoContacto { get; set; } = string.Empty;
-        public string Estado { get; set; } = "Pendiente"; // Pendiente, Pagado, Enviado, etc.
+
+        // Estados esperados: Pendiente, Aprobado, Rechazado
+        public string Estado { get; set; } = "Pendiente";
+
+        //  trackeamos cuándo se cambió el estado
+        public DateTime? FechaActualizacion { get; set; }
+
         public decimal Total { get; set; }
 
         public ICollection<PedidoDetalle> Detalles { get; set; } = new List<PedidoDetalle>();
     }
-
 }
