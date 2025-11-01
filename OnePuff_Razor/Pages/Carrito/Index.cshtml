@@ -62,13 +62,12 @@ else
 
 @section Scripts {
     <script>
-        // 🔄 Refresca el contenido del carrito dinámicamente
+        // 🔄 Refresca el contenido del carrito dinámicamente (re-render del <main>)
         async function actualizarVistaCarrito(){
             try {
                 const r = await fetch('/Carrito');
                 const html = await r.text();
 
-                 // Reemplaza solo el contenido dentro del <main>
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, "text/html");
                 const nuevoMain = doc.querySelector("main").innerHTML;
@@ -98,6 +97,8 @@ else
             async quitar(id){ await accion('Quitar', id); },
             async eliminar(id){ await accion('Eliminar', id); },
             async vaciar(){ await accion('Vaciar'); },
+
+            // ✅ Finalizar ahora redirige directo al catálogo con bandera de éxito (?compra=ok)
             async finalizar(){
                 if (!confirm("¿Confirmás la compra?")) return;
 
@@ -115,10 +116,8 @@ else
                     return;
                 }
 
-                const data = await r.json();
-                alert(`✅ Pedido #${data.pedidoId} creado. Te enviamos el ticket por email.`);
-                // Si más adelante agregamos la página de detalle:
-                // window.location.href = `/Pedidos/Detalle?id=${data.pedidoId}`;
+                // 🎯 UX: redirigimos al catálogo con una alerta verde
+                window.location.href = `/Productos/Cliente?compra=ok`;
             }
         };
 

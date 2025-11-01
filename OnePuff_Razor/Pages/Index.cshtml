@@ -1,5 +1,96 @@
 ﻿@page
 @model OnePuff_Razor.Pages.IndexModel
+@{
+    ViewData["Title"] = "Inicio";
+    Layout = "_Layout";
+}
 
-<h1>Bienvenido a OnePuff Market 🛒</h1>
-<p>Usá el menú de arriba para navegar entre productos y categorías.</p>
+<!-- Hero / banner -->
+<div class="p-5 mb-4 bg-light rounded-3 shadow-sm">
+    <div class="container py-5">
+        <h1 class="display-6 fw-bold">Bienvenido a OnePuff</h1>
+        <p class="col-md-8 fs-5 text-muted">
+            Comprá fácil y rápido. Productos actualizados, carrito ágil y seguimiento de tus pedidos.
+        </p>
+
+        @* CTA según sesión/rol *@
+        @if (!(User?.Identity?.IsAuthenticated ?? false))
+        {
+            <div class="d-flex gap-2">
+                <a asp-page="/Usuarios/Login" class="btn btn-primary btn-lg">Iniciar sesión</a>
+                <a asp-page="/Usuarios/Register" class="btn btn-outline-primary btn-lg">Crear cuenta</a>
+            </div>
+        }
+        else
+        {
+            var rol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (rol == "Administrador")
+            {
+                <div class="d-flex gap-2">
+                    <a asp-page="/Productos/Admin" class="btn btn-success btn-lg">Gestionar productos</a>
+                    <a asp-page="/Pedidos/Admin" class="btn btn-outline-success btn-lg">Ver pedidos</a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex gap-2">
+                    <a asp-page="/Productos/Cliente" class="btn btn-primary btn-lg">Ver productos</a>
+                    <a asp-page="/Pedidos/Cliente" class="btn btn-outline-primary btn-lg">Mis pedidos</a>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Beneficios / destacados -->
+<div class="container mb-4">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">🚚 Envío rápido</h5>
+                    <p class="card-text text-muted">Procesamos tu pedido de inmediato y te mantenemos informado del estado.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">🛒 Carrito ágil</h5>
+                    <p class="card-text text-muted">Agregá productos con un clic y finalizá la compra sin fricción.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">📧 Ticket por email</h5>
+                    <p class="card-text text-muted">Recibí el detalle de tu compra automáticamente en tu correo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Productos destacados (opcional) -->
+@if (Model.Destacados.Any())
+{
+    <div class="container">
+        <h4 class="mb-3">Productos destacados</h4>
+        <div class="d-flex flex-wrap">
+            @foreach (var p in Model.Destacados)
+            {
+                <div class="card m-2 shadow-sm" style="width: 14rem;">
+                    <img src="@p.UrlImagen" class="card-img-top" alt="@p.Nombre" style="height:140px;object-fit:contain;" />
+                    <div class="card-body text-center">
+                        <div class="fw-bold">@p.Nombre</div>
+                        <div class="text-success">💲@p.Precio.ToString("N2")</div>
+                        <a asp-page="/Productos/Cliente" class="btn btn-sm btn-outline-primary mt-2">Ver</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

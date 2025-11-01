@@ -7,6 +7,15 @@
     Layout = "_Layout";
 }
 
+@* ✅ Aviso de éxito cuando venís de finalizar compra
+   En Razor Pages usá Request.Query (NO Context) *@
+@if (Request.Query["compra"] == "ok")
+{
+    <div class="alert alert-success text-center shadow-sm">
+        ✅ ¡Compra realizada con éxito! Te enviamos el ticket por email.
+    </div>
+}
+
 <h2 class="text-center my-4">🛍️ Catálogo de Productos</h2>
 <p class="text-center text-muted mb-4">
     Filtrá los productos por nombre, categoría o precio.
@@ -47,6 +56,8 @@
                     <p class="text-muted">@producto.Categoria?.Nombre</p>
                     <p class="text-success fw-bold">💲@producto.Precio.ToString("N2")</p>
                     <p class="text-muted">Stock: @producto.Stock unidades</p>
+
+                    @* ✅ Agregar directo al carrito, SIN abrir modal *@
                     <button type="button" class="btn btn-sm btn-primary" onclick="carrito.agregar(@producto.ProductoId)">
                         🛒 Agregar
                     </button>
@@ -60,30 +71,17 @@
     }
 </div>
 
-<!-- 🪟 MODAL: Vista rápida del carrito -->
-<div class="modal fade" id="modalCarrito" tabindex="-1" aria-labelledby="modalCarritoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="modalCarritoLabel">🛍️ Tu Carrito</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body" id="contenidoCarrito">
-                <p class="text-muted">Cargando...</p>
-            </div>
-            <div class="modal-footer">
-                <a href="/Carrito" class="btn btn-success">Finalizar compra</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Seguir comprando</button>
-            </div>
-        </div>
-    </div>
-</div>
+@* 🗑️ Eliminado: modal de “vista rápida de carrito” por performance *@
+
+@* Token anti-forgery para las llamadas AJAX de carrito *@
 <input type="hidden" id="af-token" value="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 
 @section Scripts {
     <script>
-        function getCsrf(){return document.getElementById('af-token').value;}
+        // Obtiene el token anti-forgery para incluirlo en fetch POST
+        function getCsrf(){ return document.getElementById('af-token').value; }
 
+        // API del carrito expuesta a los botones de la card
         window.carrito = {
             async agregar(id){ await accion('Agregar', id); },
             async quitar(id){ await accion('Quitar', id); },
@@ -91,6 +89,8 @@
             async vaciar(){ await accion('Vaciar'); }
         };
 
+        // Acción común (POST AJAX) a /Carrito?handler=...
+        // 🔒 Incluye RequestVerificationToken para mantener consistencia anti-CSRF en este contexto
         async function accion(handler, productoId = null){
             try {
                 const qs = new URLSearchParams();
@@ -110,41 +110,24 @@
                     return;
                 }
 
-                await actualizarCarrito();
+                // ✅ Sin modal: solo refrescamos el badge del carrito
                 await actualizarBadgeCarrito();
-
-                //  Evita crear múltiples modales superpuestos
-                if (handler === 'Agregar') {
-                    const modalEl = document.getElementById('modalCarrito');
-                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                    modal.show();
-                }
-
             } catch (e) {
                 console.error(e);
             }
         }
 
-        async function actualizarCarrito(){
-            const r = await fetch('/Carrito/Resumen');
-            document.getElementById('contenidoCarrito').innerHTML = await r.text();
-        }
-
+        // Refresca el numerito del carrito en el header
         async function actualizarBadgeCarrito(){
-            const r = await fetch('/Carrito?handler=Count', { headers: { "X-Requested-With": "XMLHttpRequest" } });
-            if (!r.ok) return;
-            const d = await r.json();
-            document.getElementById('cart-badge').textContent = d.count ?? 0;
+            try {
+                const r = await fetch('/Carrito?handler=Count', { headers: { "X-Requested-With": "XMLHttpRequest" } });
+                if (!r.ok) return;
+                const d = await r.json();
+                document.getElementById('cart-badge').textContent = d.count ?? 0;
+            } catch {}
         }
 
-        //  Limpieza de backdrop y scroll al cerrar el modal
-        document.getElementById('modalCarrito').addEventListener('hidden.bs.modal', () => {
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) backdrop.remove();
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('overflow');
-        });
-
+        // Inicializa el badge al cargar
         document.addEventListener('DOMContentLoaded', actualizarBadgeCarrito);
     </script>
 }
