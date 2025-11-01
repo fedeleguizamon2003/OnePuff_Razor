@@ -36,12 +36,13 @@ builder.Services.AddRazorPages(options =>
      options.Conventions.AuthorizePage("/Pedidos/Cliente", "ClienteOnly");
      options.Conventions.AuthorizePage("/Pedidos/Admin", "AdminOnly");
      options.Conventions.AuthorizePage("/Pedidos/Detalle"); // cualquiera autenticado; la página valida propiedad
+    options.Conventions.AuthorizePage("/Usuarios/NuevoAdmin", "AdminOnly");
 });
 
 // Servicios personalizados
 builder.Services.AddScoped<CarritoService>();
-builder.Services.AddScoped<PedidoService>();   // 👈 nuevo
-builder.Services.AddScoped<EmailService>();    // 👈 nuevo
+builder.Services.AddScoped<PedidoService>();  
+builder.Services.AddScoped<EmailService>();    
 
 var app = builder.Build();
 

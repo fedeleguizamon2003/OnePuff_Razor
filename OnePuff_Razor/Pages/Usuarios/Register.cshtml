@@ -44,15 +44,9 @@
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
 
-    <!-- Rol -->
-    <div class="mb-3">
-        <label>Rol</label>
-        <select asp-for="Usuario.Rol" class="form-control">
-            <option value="Cliente">Cliente</option>
-            <option value="Administrador">Administrador</option>
-        </select>
-        <span asp-validation-for="Usuario.Rol" class="text-danger"></span>
-    </div>
+    @* Rol oculto: siempre Cliente en registro público *@
+    <input type="hidden" asp-for="Usuario.Rol" value="Cliente" />
+
 
     <!-- Dirección (solo clientes) -->
     <div id="direccionFields" class="border-top pt-3">

@@ -1,0 +1,71 @@
+﻿@page
+@model OnePuff_Razor.Pages.Usuarios.NuevoAdminModel
+@{
+    ViewData["Title"] = "Crear Administrador";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title mb-1">👑 Crear Administrador</h4>
+                <p class="text-muted mb-4">Solo para uso interno. Los visitantes no pueden crear administradores.</p>
+
+                <!-- Errores de validación -->
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                <form method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre</label>
+                            <input asp-for="Usuario.Nombre" class="form-control" />
+                            <span asp-validation-for="Usuario.Nombre" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido</label>
+                            <input asp-for="Usuario.Apellido" class="form-control" />
+                            <span asp-validation-for="Usuario.Apellido" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input asp-for="Usuario.Email" type="email" class="form-control" />
+                            <span asp-validation-for="Usuario.Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">DNI</label>
+                            <input asp-for="Usuario.Dni" class="form-control" />
+                            <span asp-validation-for="Usuario.Dni" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    @* Rol forzado a Administrador (oculto) *@
+                    <input type="hidden" asp-for="Usuario.Rol" value="Administrador" />
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Crear administrador</button>
+                        <a asp-page="/Productos/Admin" class="btn btn-outline-secondary">Volver</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-shield-lock"></i>
+            Asegurate de usar un correo institucional. Este usuario tendrá permisos completos.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

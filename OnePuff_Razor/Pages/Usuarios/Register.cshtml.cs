@@ -22,6 +22,9 @@ namespace OnePuff_Razor.Pages.Usuarios
 
         public async Task<IActionResult> OnPostAsync()
         {
+            Usuario.Rol = "Cliente"; // blindar registro público solo a Cliente
+
+
             // 1️ Validar contraseña del formulario
             if (string.IsNullOrWhiteSpace(Password))
                 ModelState.AddModelError(nameof(Password), "La contraseña es obligatoria.");
