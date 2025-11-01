@@ -1,0 +1,91 @@
+﻿@page
+@model OnePuff_Razor.Pages.Usuarios.EditarPerfilModel
+@{
+    ViewData["Title"] = "Editar mi perfil";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        @if (TempData["PerfilOk"] != null)
+        {
+            <div class="alert alert-success shadow-sm">@TempData["PerfilOk"]</div>
+        }
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title mb-1">👤 Editar mi perfil</h4>
+                <p class="text-muted mb-4">Actualizá tu email, teléfono y dirección de entrega.</p>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                <form method="post">
+                    <!-- Datos no editables (referencia visual) -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Nombre</label>
+                            <input class="form-control" value="@Model.NombreCompleto" disabled />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">DNI</label>
+                            <input class="form-control" value="@Model.Dni" disabled />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Rol</label>
+                            <input class="form-control" value="@Model.Rol" disabled />
+                        </div>
+                    </div>
+
+                    <!-- Email + Teléfono -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" type="email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Telefono" class="form-label">Teléfono</label>
+                            <input asp-for="Telefono" class="form-control" placeholder="Ej: 351-5555555" />
+                            <span asp-validation-for="Telefono" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <!-- Dirección -->
+                    <h6 class="mb-3">📍 Dirección de entrega</h6>
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label asp-for="Direccion.Calle" class="form-label">Calle</label>
+                            <input asp-for="Direccion.Calle" class="form-control" />
+                            <span asp-validation-for="Direccion.Calle" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Direccion.Altura" class="form-label">Altura</label>
+                            <input asp-for="Direccion.Altura" class="form-control" />
+                            <span asp-validation-for="Direccion.Altura" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Direccion.Localidad" class="form-label">Localidad</label>
+                            <input asp-for="Direccion.Localidad" class="form-control" />
+                            <span asp-validation-for="Direccion.Localidad" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Guardar cambios</button>
+                        <a asp-page="/Productos/Cliente" class="btn btn-outline-secondary">Volver</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle"></i>
+            <span>Tu email se usa para notificaciones y envío del ticket. Asegurate de que esté correcto.</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

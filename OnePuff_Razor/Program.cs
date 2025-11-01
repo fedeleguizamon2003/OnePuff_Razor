@@ -36,7 +36,10 @@ builder.Services.AddRazorPages(options =>
      options.Conventions.AuthorizePage("/Pedidos/Cliente", "ClienteOnly");
      options.Conventions.AuthorizePage("/Pedidos/Admin", "AdminOnly");
      options.Conventions.AuthorizePage("/Pedidos/Detalle"); // cualquiera autenticado; la página valida propiedad
+
     options.Conventions.AuthorizePage("/Usuarios/NuevoAdmin", "AdminOnly");
+    options.Conventions.AuthorizePage("/Usuarios/EditarPerfil", "ClienteOnly");
+
 });
 
 // Servicios personalizados

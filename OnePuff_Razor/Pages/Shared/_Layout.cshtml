@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/OnePuff_Razor.styles.css" asp-append-version="true" />
 
-    <!-- 🔹 Bootstrap Icons (para íconos como bi-check-circle-fill, bi-slash-circle-fill, etc.) -->
+    <!-- 🔹 Bootstrap Icons -->
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
@@ -41,64 +41,48 @@
                         </li>
 
                         @* ======================================================
-                           🔹 Menú dinámico: cambia según sesión y rol del usuario
+                           🔹 Menú dinámico: unificado para evitar duplicaciones
                            ====================================================== *@
-
-                        @if (User.Identity?.IsAuthenticated ?? false)
-                        {
-                            var rol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-
-                            if (rol == "Administrador")
-                            {
-                                <!-- 🔸 Si es ADMIN → acceso al panel de gestión -->
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/Productos/Admin">Gestión de Productos</a>
-                                </li>
-                            }
-                            else if (rol == "Cliente")
-                            {
-                                <!-- 🔸 Si es CLIENTE → acceso al catálogo -->
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/Productos/Cliente">Productos</a>
-                                </li>
-                            }
+                        @{
+                            var autenticado = User.Identity?.IsAuthenticated ?? false;
+                            var rol = autenticado
+                            ? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+                            : null;
                         }
-                        else
+
+                        @if (!autenticado)
                         {
-                            <!-- 🔸 Usuario no autenticado → redirige al login -->
+                            <!-- Usuario NO autenticado: muestra acceso a Productos (lleva a Login) -->
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Usuarios/Login">Productos</a>
                             </li>
                         }
-                        @if (User.Identity?.IsAuthenticated ?? false)
+                        else if (rol == "Administrador")
                         {
-                            var rol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-
-                            if (rol == "Administrador")
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/Productos/Admin">Gestión de Productos</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/Pedidos/Admin">Pedidos</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/Usuarios/NuevoAdmin">Crear admin</a>
-                                </li>
-
-                            }
-                            else if (rol == "Cliente")
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/Productos/Cliente">Productos</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/Pedidos/Cliente">Mis pedidos</a>
-                                </li>
-                            }
+                            <!-- ADMIN -->
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Productos/Admin">Gestión de Productos</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Pedidos/Admin">Pedidos</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Usuarios/NuevoAdmin">Crear admin</a>
+                            </li>
                         }
-
-
+                        else if (rol == "Cliente")
+                        {
+                            <!-- CLIENTE -->
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Productos/Cliente">Productos</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Pedidos/Cliente">Mis pedidos</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Usuarios/EditarPerfil">Mi perfil</a>
+                            </li>
+                        }
                     </ul>
 
                     @* ======================================================
@@ -121,7 +105,6 @@
                                     0
                                 </span>
                             </a>
-
 
                             <!-- 🚪 Botón para cerrar sesión -->
                             <a asp-page="/Usuarios/Logout" class="btn btn-outline-danger btn-sm">
