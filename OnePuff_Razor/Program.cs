@@ -40,12 +40,16 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizePage("/Usuarios/NuevoAdmin", "AdminOnly");
     options.Conventions.AuthorizePage("/Usuarios/EditarPerfil", "ClienteOnly");
 
+    options.Conventions.AuthorizePage("/Monedero/Recarga", "ClienteOnly");
+    options.Conventions.AuthorizePage("/Monedero/Movimientos", "ClienteOnly");
+
 });
 
 // Servicios personalizados
 builder.Services.AddScoped<CarritoService>();
 builder.Services.AddScoped<PedidoService>();  
-builder.Services.AddScoped<EmailService>();    
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<MonederoService>(); 
 
 var app = builder.Build();
 

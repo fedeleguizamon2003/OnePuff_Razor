@@ -42,7 +42,7 @@ namespace OnePuff_Razor.Pages.Pedidos
             return RedirectToPage();
         }
 
-        // ? Rechazar
+        //  Rechazar
         public async Task<IActionResult> OnPostRechazarAsync(int id)
         {
             var pedido = await _context.Pedidos.FindAsync(id);
@@ -56,7 +56,7 @@ namespace OnePuff_Razor.Pages.Pedidos
             }
 
             pedido.Estado = "Rechazado";
-            pedido.FechaActualizacion = DateTime.Now;
+            pedido.FechaActualizacion = DateTime.Now; 
 
             await _context.SaveChangesAsync();
 

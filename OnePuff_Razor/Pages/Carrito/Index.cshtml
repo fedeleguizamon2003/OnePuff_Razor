@@ -40,14 +40,21 @@
         </tbody>
     </table>
 
-    <div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mt-3 gap-3">
         <div class="d-flex gap-2">
             <button class="btn btn-danger" onclick="carrito.vaciar()">🗑 Vaciar carrito</button>
+
+            <!-- Finalizar compra “normal” (sin monedero) -->
             <button type="button" class="btn btn-success" onclick="carrito.finalizar()">💳 Finalizar compra</button>
+
+            <!--  pagar con monedero -->
+            <button type="button" class="btn btn-primary" onclick="carrito.pagarMonedero()">💼 Pagar con monedero</button>
         </div>
 
         <h4 class="mb-0">
-            Total: <span class="text-success fw-bold">💲@Model.CarritoActual.Items.Sum(i => i.PrecioUnitarioSnapshot * i.Cantidad).ToString("N2")</span>
+            Total: <span class="text-success fw-bold">
+                💲@Model.CarritoActual.Items.Sum(i => i.PrecioUnitarioSnapshot * i.Cantidad).ToString("N2")
+            </span>
         </h4>
     </div>
 
@@ -62,7 +69,7 @@ else
 
 @section Scripts {
     <script>
-        // 🔄 Refresca el contenido del carrito dinámicamente (re-render del <main>)
+        // Refresca el contenido del carrito dinámicamente (se rehace el <main>)
         async function actualizarVistaCarrito(){
             try {
                 const r = await fetch('/Carrito');
@@ -79,7 +86,7 @@ else
             }
         }
 
-        // 🛍️ Actualiza el número de ítems en el icono del header
+        // Actualiza el número de ítems del badge en el header
         async function actualizarBadgeCarrito(){
             try {
                 const r = await fetch('/Carrito?handler=Count', {
@@ -87,18 +94,19 @@ else
                 });
                 if (!r.ok) return;
                 const d = await r.json();
-                document.getElementById('cart-badge').textContent = d.count ?? 0;
+                const badge = document.getElementById('cart-badge');
+                if (badge) badge.textContent = d.count ?? 0;
             } catch {}
         }
 
-        // ⚙️ Acciones del carrito (AJAX)
+        // Acciones del carrito (AJAX)
         window.carrito = {
             async agregar(id){ await accion('Agregar', id); },
             async quitar(id){ await accion('Quitar', id); },
             async eliminar(id){ await accion('Eliminar', id); },
             async vaciar(){ await accion('Vaciar'); },
 
-            // ✅ Finalizar ahora redirige directo al catálogo con bandera de éxito (?compra=ok)
+            // Finalización “normal” (crea pedido, no usa monedero)
             async finalizar(){
                 if (!confirm("¿Confirmás la compra?")) return;
 
@@ -116,12 +124,38 @@ else
                     return;
                 }
 
-                // 🎯 UX: redirigimos al catálogo con una alerta verde
-                window.location.href = `/Productos/Cliente?compra=ok`;
+                const data = await r.json();
+                alert(`✅ Pedido #${data.pedidoId} creado. Te enviamos el ticket por email.`);
+
+                // Redirigimos al catálogo como pediste
+                window.location.href = "/Productos/Cliente";
+            },
+
+            // NUEVO: pagar con monedero
+            async pagarMonedero() {
+                if (!confirm("Se debitará el total del monedero. ¿Confirmás el pago?")) return;
+
+                const qs = new URLSearchParams();
+                qs.set('handler', 'PagarMonedero');
+
+                const r = await fetch(`/Carrito?${qs}`, {
+                    method: 'POST',
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+
+                if (!r.ok) {
+                    const t = await r.text();
+                    alert("❌ No se pudo pagar con el monedero.\n\n" + t);
+                    return;
+                }
+
+                const data = await r.json();
+                alert(`✅ Pago con monedero aplicado. Pedido #${data.pedidoId} creado.`);
+                window.location.href = "/Productos/Cliente";
             }
         };
 
-        // 🔧 Lógica común para manejar fetch hacia el backend
+        // Lógica común para handlers de sumar/quitar/eliminar/vaciar
         async function accion(handler, productoId = null){
             try {
                 const qs = new URLSearchParams();

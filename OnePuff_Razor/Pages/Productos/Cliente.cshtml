@@ -6,15 +6,27 @@
     ViewData["Title"] = "Catálogo de Productos";
     Layout = "_Layout";
 }
-
-@* ✅ Aviso de éxito cuando venís de finalizar compra
-   En Razor Pages usá Request.Query (NO Context) *@
-@if (Request.Query["compra"] == "ok")
-{
-    <div class="alert alert-success text-center shadow-sm">
-        ✅ ¡Compra realizada con éxito! Te enviamos el ticket por email.
-    </div>
+@* ✅ Aviso de éxito cuando venís de finalizar compra (normal o monedero) *@
+@{
+    var compraOk = Request.Query["compra"].ToString();
 }
+@if (!string.IsNullOrEmpty(compraOk) && compraOk == "ok")
+{
+    <div class="alert alert-success alert-dismissible fade show text-center shadow-sm" role="alert">
+        ✅ ¡Compra realizada con éxito! Te enviamos el ticket por email.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+
+    <script>
+        // Cierra solo después de unos segundos (detalle UX)
+        setTimeout(() => {
+            const el = document.querySelector('.alert.alert-success');
+            if (el) new bootstrap.Alert(el).close();
+        }, 5000);
+    </script>
+}
+
+
 
 <h2 class="text-center my-4">🛍️ Catálogo de Productos</h2>
 <p class="text-center text-muted mb-4">

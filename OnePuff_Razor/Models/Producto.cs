@@ -20,5 +20,7 @@ namespace OnePuff_Razor.Models
         // FK
         public int CategoriaId { get; set; }
         public Categoria? Categoria { get; set; }
+
+
     }
 }
