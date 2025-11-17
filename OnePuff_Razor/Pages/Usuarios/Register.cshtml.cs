@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using OnePuff_Razor.Data;
 using OnePuff_Razor.Models;
+using OnePuff_Razor.Services;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -10,12 +11,18 @@ namespace OnePuff_Razor.Pages.Usuarios
     public class RegisterModel : PageModel
     {
         private readonly AppDbContext _context;
-        public RegisterModel(AppDbContext context) => _context = context;
+        private readonly EmailService _emailService;
+
+        public RegisterModel(AppDbContext context, IConfiguration config)
+        {
+            _context = context;
+            _emailService = new EmailService(config);
+        }
 
         [BindProperty] public Usuario Usuario { get; set; } = new Usuario();
         [BindProperty] public Direccion Direccion { get; set; } = new Direccion();
 
-        // 👇 Este es el campo que llena el form (NO usar Usuario.Contraseña)
+        // Contraseña ingresada en el formulario (NO es el hash)
         [BindProperty] public string Password { get; set; } = string.Empty;
 
         public void OnGet() { }
@@ -24,35 +31,29 @@ namespace OnePuff_Razor.Pages.Usuarios
         {
             Usuario.Rol = "Cliente"; // blindar registro público solo a Cliente
 
-
-            // 1️ Validar contraseña del formulario
+            // 1) Validar contraseña del formulario
             if (string.IsNullOrWhiteSpace(Password))
                 ModelState.AddModelError(nameof(Password), "La contraseña es obligatoria.");
 
-            // 2️ Normalizar datos básicos
+            // 2) Normalizar datos básicos
             Usuario.Dni = Usuario.Dni?.Trim();
             Usuario.Email = Usuario.Email?.Trim().ToLower();
 
-            // 3️ Validar duplicados
+            // 3) Validar duplicados
             if (_context.Usuarios.Any(u => u.Dni == Usuario.Dni))
                 ModelState.AddModelError("Usuario.Dni", "Ya existe un usuario registrado con ese DNI.");
+
             if (_context.Usuarios.Any(u => u.Email == Usuario.Email))
                 ModelState.AddModelError("Usuario.Email", "Ya existe una cuenta con este correo electrónico.");
 
-            // 4️ Si hay errores, volvemos (ignorando PasswordHash por ahora)
-            //  Removemos el campo de la validación temporalmente
+            // Sacamos temporalmente validation del PasswordHash
             ModelState.Remove("Usuario.PasswordHash");
 
+            // Si hay errores → volver
             if (!ModelState.IsValid)
-            {
-                foreach (var e in ModelState)
-                    if (e.Value?.Errors.Count > 0)
-                        Console.WriteLine($"❌ {e.Key}: {string.Join(", ", e.Value.Errors.Select(er => er.ErrorMessage))}");
-
                 return Page();
-            }
 
-            // 5️ Hash de la contraseña
+            // 4) Hash de password
             using (var sha = SHA256.Create())
             {
                 var bytes = Encoding.UTF8.GetBytes(Password);
@@ -60,14 +61,17 @@ namespace OnePuff_Razor.Pages.Usuarios
                 Usuario.PasswordHash = BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
 
-            // 6️ Revalidamos solo el objeto Usuario (ahora con el hash cargado)
-            TryValidateModel(Usuario, nameof(Usuario));
+            // 5) Generar código de verificación (6 dígitos)
+            var random = new Random();
+            Usuario.CodigoVerificacion = random.Next(100000, 999999).ToString();
+            Usuario.CodigoExpira = DateTime.UtcNow.AddMinutes(15);
+            Usuario.EmailVerificado = false;
 
-            // 7️ Guardamos usuario
+            // 6) Guardamos Usuario
             _context.Usuarios.Add(Usuario);
             await _context.SaveChangesAsync();
 
-            // 8️ Si es cliente, guardar dirección vinculada
+            // 7) Guardamos dirección
             if (Usuario.Rol == "Cliente")
             {
                 Direccion.UsuarioId = Usuario.UsuarioId;
@@ -75,9 +79,21 @@ namespace OnePuff_Razor.Pages.Usuarios
                 await _context.SaveChangesAsync();
             }
 
-            TempData["RegistroExitoso"] = "✅ Cuenta creada correctamente. Iniciá sesión.";
-            return RedirectToPage("/Usuarios/Login");
-        }
+            // 8) Enviar email con código
+            var cuerpo = $@"
+                <h3>Bienvenido a OnePuff</h3>
+                <p>Tu código de verificación es:</p>
+                <h2><b>{Usuario.CodigoVerificacion}</b></h2>
+                <p>Expira en 15 minutos.</p>";
 
+            await _emailService.EnviarEmailAsync(
+                Usuario.Email,
+                "Código de verificación - OnePuff",
+                cuerpo
+            );
+
+            // 9) Redirigir a la página de verificación
+            return RedirectToPage("/Usuarios/Verificar", new { email = Usuario.Email });
+        }
     }
 }

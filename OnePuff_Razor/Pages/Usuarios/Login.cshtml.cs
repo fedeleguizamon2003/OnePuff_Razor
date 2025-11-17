@@ -62,12 +62,20 @@ namespace OnePuff_Razor.Pages.Usuarios
             var hash = sha.ComputeHash(bytes);
             var hashHex = BitConverter.ToString(hash).Replace("-", "").ToLower();
 
-            //  Si el hash no coincide con el guardado en la BD
+            // Si password incorrecta
             if (usuario.PasswordHash != hashHex)
             {
                 ModelState.AddModelError(string.Empty, "Credenciales inválidas.");
                 return Page();
             }
+
+            // Bloquear si email no verificado
+            if (!usuario.EmailVerificado)
+            {
+                TempData["Error"] = "Debés verificar tu email para continuar.";
+                return RedirectToPage("/Usuarios/Verificar", new { email = usuario.Email });
+            }
+
 
             //  Autenticación correcta → crear identidad y cookie
             var claims = new List<Claim>

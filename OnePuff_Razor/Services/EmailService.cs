@@ -35,9 +35,9 @@ namespace OnePuff_Razor.Services
             await cliente.SendMailAsync(mensaje);
         }
 
-        /// <summary>
+        
         /// Alternativa simple si querés pasar un cuerpo ya armado (texto/HTML).
-        /// </summary>
+       
         public async Task EnviarFacturaAsync(string emailDestino, string cuerpo, bool esHtml = false)
         {
             var smtp = _config.GetSection("Smtp");
@@ -59,6 +59,32 @@ namespace OnePuff_Razor.Services
 
             await cliente.SendMailAsync(mensaje);
         }
+
+  
+        /// Envía un email simple con asunto personalizado (HTML o texto)
+        
+        public async Task EnviarEmailAsync(string emailDestino, string asunto, string cuerpoHtml)
+        {
+            var smtp = _config.GetSection("Smtp");
+
+            using var mensaje = new MailMessage(smtp["From"], emailDestino)
+            {
+                Subject = asunto,
+                Body = cuerpoHtml,
+                IsBodyHtml = true,
+                BodyEncoding = Encoding.UTF8,
+                SubjectEncoding = Encoding.UTF8
+            };
+
+            using var cliente = new SmtpClient(smtp["Host"], int.Parse(smtp["Port"] ?? "587"))
+            {
+                EnableSsl = true,
+                Credentials = new NetworkCredential(smtp["User"], smtp["Pass"])
+            };
+
+            await cliente.SendMailAsync(mensaje);
+        }
+
 
         private string ConstruirHtmlTicket(Pedido p)
         {

@@ -1,0 +1,40 @@
+﻿@page
+@model OnePuff_Razor.Pages.Usuarios.VerificarModel
+@{
+    ViewData["Title"] = "Verificar Email";
+    Layout = "_Layout";
+}
+
+<h2 class="mb-3">Verificar Email</h2>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+
+@if (TempData["Msg"] != null)
+{
+    <div class="alert alert-info">@TempData["Msg"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+
+
+<form method="post" class="border p-4 rounded shadow">
+    <input type="hidden" asp-for="Email" />
+
+    <label class="form-label">Código enviado a tu correo</label>
+    <input asp-for="Codigo" class="form-control" />
+    <span asp-validation-for="Codigo" class="text-danger"></span>
+
+    <button class="btn btn-primary mt-3">Verificar</button>
+</form>
+
+<hr />
+
+<a asp-page="/Usuarios/ReenviarCodigo" asp-route-email="@Model.Email">Reenviar código</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

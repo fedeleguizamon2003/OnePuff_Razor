@@ -31,5 +31,12 @@ namespace OnePuff_Razor.Models
 
         // 1:1 (opcional)
         public Direccion? Direccion { get; set; }
+
+        public bool EmailVerificado { get; set; } = false;
+
+        public string? CodigoVerificacion { get; set; }
+
+        public DateTime? CodigoExpira { get; set; }
+
     }
 }
