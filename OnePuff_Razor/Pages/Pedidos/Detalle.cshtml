@@ -42,5 +42,17 @@
 </table>
 
 <div class="d-flex gap-2">
-    <a asp-page="/Productos/Cliente" class="btn btn-secondary">Seguir comprando</a>
+
+    @if (User.IsInRole("Cliente"))
+    {
+        <!-- CLIENTE: botón seguir comprando -->
+        <a asp-page="/Productos/Cliente" class="btn btn-secondary">Seguir comprando</a>
+    }
+    else if (User.IsInRole("Administrador"))
+    {
+        <!-- ADMIN: botón volver a la lista -->
+        <a asp-page="/Pedidos/Admin" class="btn btn-outline-secondary">← Volver</a>
+    }
+
 </div>
+

@@ -16,8 +16,11 @@ namespace OnePuff_Razor.Pages.Pedidos
         public async Task OnGetAsync()
         {
             Pedidos = await _context.Pedidos
-                .OrderByDescending(p => p.FechaPedido)
-                .ToListAsync();
+                 .Include(p => p.Cliente)
+                 .ThenInclude(c => c.Usuario)
+                 .OrderByDescending(p => p.FechaPedido)
+                 .ToListAsync();
+
         }
 
         // ? Aprobar

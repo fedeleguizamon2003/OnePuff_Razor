@@ -59,17 +59,23 @@
                         }
                         else if (rol == "Administrador")
                         {
-                            <!-- ADMIN -->
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Productos/Admin">Gestión de Productos</a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Pedidos/Admin">Pedidos</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Usuarios/NuevoAdmin">Crear admin</a>
-                            </li>
+
+                            @* SOLO el admin maestro puede gestionar usuarios *@
+                            @if (User.Identity?.Name == "calopez@iiconcepcion.edu.ar")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-page="/Usuarios/Gestion">Gestión de Usuarios</a>
+                                </li>
+                            }
                         }
+
                         else if (rol == "Cliente")
                         {
                             <!-- CLIENTE -->
@@ -89,6 +95,9 @@
                                 <a class="nav-link text-dark" asp-page="/Monedero/Movimientos">Movimientos</a>
                             </li>
                         }
+
+                       
+
                     </ul>
 
                     @* ======================================================

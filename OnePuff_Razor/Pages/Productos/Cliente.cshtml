@@ -6,7 +6,10 @@
     ViewData["Title"] = "Catálogo de Productos";
     Layout = "_Layout";
 }
-@* ✅ Aviso de éxito cuando venís de finalizar compra (normal o monedero) *@
+
+@* ===============================
+   Aviso de compra exitosa (pedido finalizado)
+   =============================== *@
 @{
     var compraOk = Request.Query["compra"].ToString();
 }
@@ -14,11 +17,11 @@
 {
     <div class="alert alert-success alert-dismissible fade show text-center shadow-sm" role="alert">
         ✅ ¡Compra realizada con éxito! Te enviamos el ticket por email.
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
     <script>
-        // Cierra solo después de unos segundos (detalle UX)
+        // Auto-cerrar después de unos segundos
         setTimeout(() => {
             const el = document.querySelector('.alert.alert-success');
             if (el) new bootstrap.Alert(el).close();
@@ -26,53 +29,95 @@
     </script>
 }
 
-
-
 <h2 class="text-center my-4">🛍️ Catálogo de Productos</h2>
 <p class="text-center text-muted mb-4">
     Filtrá los productos por nombre, categoría o precio.
 </p>
 
-<!--  FORMULARIO DE FILTROS -->
+@* ===============================
+   FORMULARIO DE FILTROS
+   =============================== *@
 <form method="get" class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
-    <input type="text" name="NombreFiltro" value="@Model.NombreFiltro" class="form-control w-25" placeholder="Ej: arroz, gaseosa..." />
+
+    <input type="text" name="NombreFiltro" value="@Model.NombreFiltro"
+           class="form-control w-25" placeholder="Ej: arroz, gaseosa..." />
 
     <select name="CategoriaIdFiltro" class="form-select w-25">
         <option value="">Todas</option>
         @foreach (var categoria in Model.Categorias)
         {
-            <option value="@categoria.CategoriaId" selected="@(Model.CategoriaIdFiltro == categoria.CategoriaId)">
+            <option value="@categoria.CategoriaId"
+                    selected="@(Model.CategoriaIdFiltro == categoria.CategoriaId)">
                 @categoria.Nombre
             </option>
         }
     </select>
 
-    <input type="number" name="PrecioMinFiltro" value="@Model.PrecioMinFiltro" class="form-control w-25" placeholder="Desde ($)" />
-    <input type="number" name="PrecioMaxFiltro" value="@Model.PrecioMaxFiltro" class="form-control w-25" placeholder="Hasta ($)" />
+    <input type="number" name="PrecioMinFiltro" value="@Model.PrecioMinFiltro"
+           class="form-control w-25" placeholder="Desde ($)" />
+
+    <input type="number" name="PrecioMaxFiltro" value="@Model.PrecioMaxFiltro"
+           class="form-control w-25" placeholder="Hasta ($)" />
 
     <button type="submit" class="btn btn-primary">
         <i class="bi bi-search"></i> Filtrar
     </button>
 </form>
 
-<!--  LISTADO DE PRODUCTOS -->
+@* ===============================
+   LISTADO DE PRODUCTOS
+   =============================== *@
 <div class="d-flex flex-wrap justify-content-center">
+
     @if (Model.Productos.Any())
     {
         @foreach (var producto in Model.Productos)
         {
             <div class="card m-3 shadow-sm" style="width: 16rem;">
                 <img src="@producto.UrlImagen" class="card-img-top" alt="@producto.Nombre" />
+
                 <div class="card-body text-center">
                     <h5 class="card-title fw-bold">@producto.Nombre</h5>
                     <p class="text-muted">@producto.Categoria?.Nombre</p>
                     <p class="text-success fw-bold">💲@producto.Precio.ToString("N2")</p>
                     <p class="text-muted">Stock: @producto.Stock unidades</p>
 
-                    @* ✅ Agregar directo al carrito, SIN abrir modal *@
-                    <button type="button" class="btn btn-sm btn-primary" onclick="carrito.agregar(@producto.ProductoId)">
-                        🛒 Agregar
-                    </button>
+                    @* ==============================
+                       LÓGICA DE BOTÓN:
+                       Si NO está en el carrito → "Agregar"
+                       Si YA está → botones – cantidad +
+                       ============================== *@
+                    @{
+                        int cant = 0;
+                        Model.CantidadesPorProducto.TryGetValue(producto.ProductoId, out cant);
+                    }
+
+                    @if (cant == 0)
+                    {
+                        <button type="button"
+                                class="btn btn-sm btn-primary"
+                                onclick="carrito.agregar(@producto.ProductoId)">
+                            🛒 Agregar
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="d-flex justify-content-center align-items-center gap-3">
+
+                            <button class="btn btn-outline-danger btn-sm"
+                                    onclick="carrito.quitar(@producto.ProductoId)">
+                                –
+                            </button>
+
+                            <span class="fw-bold">@cant</span>
+
+                            <button class="btn btn-outline-success btn-sm"
+                                    onclick="carrito.agregar(@producto.ProductoId)">
+                                +
+                            </button>
+
+                        </div>
+                    }
                 </div>
             </div>
         }
@@ -83,34 +128,32 @@
     }
 </div>
 
-@* 🗑️ Eliminado: modal de “vista rápida de carrito” por performance *@
-
-@* Token anti-forgery para las llamadas AJAX de carrito *@
+@* Token anti-CSRF para llamadas AJAX *@
 <input type="hidden" id="af-token" value="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 
 @section Scripts {
     <script>
-        // Obtiene el token anti-forgery para incluirlo en fetch POST
+
+        // Obtener CSRF
         function getCsrf(){ return document.getElementById('af-token').value; }
 
-        // API del carrito expuesta a los botones de la card
+        // API del carrito
         window.carrito = {
-            async agregar(id){ await accion('Agregar', id); },
-            async quitar(id){ await accion('Quitar', id); },
-            async eliminar(id){ await accion('Eliminar', id); },
-            async vaciar(){ await accion('Vaciar'); }
+            async agregar(id){ await accion("Agregar", id); },
+            async quitar(id){ await accion("Quitar", id); },
+            async eliminar(id){ await accion("Eliminar", id); },
+            async vaciar(){ await accion("Vaciar"); }
         };
 
-        // Acción común (POST AJAX) a /Carrito?handler=...
-        // 🔒 Incluye RequestVerificationToken para mantener consistencia anti-CSRF en este contexto
+        // Acción AJAX genérica
         async function accion(handler, productoId = null){
             try {
                 const qs = new URLSearchParams();
-                qs.set('handler', handler);
-                if (productoId !== null) qs.set('productoId', productoId);
+                qs.set("handler", handler);
+                if (productoId !== null) qs.set("productoId", productoId);
 
                 const r = await fetch(`/Carrito?${qs}`, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
                         "X-Requested-With": "XMLHttpRequest",
                         "RequestVerificationToken": getCsrf()
@@ -122,24 +165,30 @@
                     return;
                 }
 
-                // ✅ Sin modal: solo refrescamos el badge del carrito
                 await actualizarBadgeCarrito();
+
+                // 🔄 Refrescar la página para actualizar los botones + -
+                location.reload();
+
             } catch (e) {
-                console.error(e);
+                console.error("Error carrito:", e);
             }
         }
 
-        // Refresca el numerito del carrito en el header
+        // Badge carrito
         async function actualizarBadgeCarrito(){
             try {
-                const r = await fetch('/Carrito?handler=Count', { headers: { "X-Requested-With": "XMLHttpRequest" } });
+                const r = await fetch("/Carrito?handler=Count", {
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+
                 if (!r.ok) return;
                 const d = await r.json();
-                document.getElementById('cart-badge').textContent = d.count ?? 0;
+                document.getElementById("cart-badge").textContent = d.count ?? 0;
             } catch {}
         }
 
-        // Inicializa el badge al cargar
-        document.addEventListener('DOMContentLoaded', actualizarBadgeCarrito);
+        document.addEventListener("DOMContentLoaded", actualizarBadgeCarrito);
+
     </script>
 }

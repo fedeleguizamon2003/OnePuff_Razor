@@ -80,8 +80,9 @@ namespace OnePuff_Razor.Pages.Usuarios
             //  Autenticación correcta → crear identidad y cookie
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, usuario.Nombre),
+                new Claim(ClaimTypes.Name, usuario.Email),
                 new Claim(ClaimTypes.Role, usuario.Rol),
+                new Claim(ClaimTypes.Email, usuario.Email),
                 new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString())
             };
 

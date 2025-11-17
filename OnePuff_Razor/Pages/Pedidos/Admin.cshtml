@@ -16,7 +16,7 @@
     <thead class="table-light">
         <tr>
             <th>#</th>
-            <th>ClienteId</th>
+            <th>Cliente</th>
             <th>Fecha</th>
             <th>Estado</th>
             <th class="text-end">Total</th>
@@ -28,7 +28,21 @@
         {
             <tr>
                 <td>@p.PedidoId</td>
-                <td>@p.ClienteId</td>
+                <td>
+                    <div>
+                        <b>@(p.Cliente?.Usuario?.Nombre) @(p.Cliente?.Usuario?.Apellido)</b>
+                        <span class="text-muted">(@p.ClienteId)</span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(p.Cliente?.Usuario?.Email))
+                    {
+                        <div class="text-muted small">
+                            @p.Cliente.Usuario.Email
+                        </div>
+                    }
+                </td>
+
+
                 <td>
                     @p.FechaPedido:g
                     @if (p.FechaActualizacion.HasValue)
