@@ -13,7 +13,10 @@ namespace OnePuff_Razor.Services
             _context = context;
         }
 
+        /// <summary>
         /// Crea un pedido a partir del carrito abierto del cliente.
+        /// Ahora valida stock y descuenta dentro de una transacción.
+        /// </summary>
         public async Task<Pedido> CrearDesdeCarritoAsync(int clienteId)
         {
             // 1) Traer carrito abierto con productos
@@ -25,7 +28,33 @@ namespace OnePuff_Razor.Services
             if (carrito == null || carrito.Items == null || carrito.Items.Count == 0)
                 throw new InvalidOperationException("El carrito está vacío o no existe.");
 
-            // 2) Traer datos del cliente/usuario para ticket/dirección
+            // 2) Validación de stock
+            foreach (var it in carrito.Items)
+            {
+                var producto = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.ProductoId == it.ProductoId);
+
+                if (producto == null || !producto.EstaActivo)
+                    throw new InvalidOperationException(
+                        $"El producto '{it.Producto?.Nombre ?? ("ID " + it.ProductoId)}' ya no está disponible.");
+
+                if (producto.Stock < it.Cantidad)
+                    throw new InvalidOperationException(
+                        $"No hay suficiente stock de '{producto.Nombre}'. " +
+                        $"Stock actual: {producto.Stock}, solicitado: {it.Cantidad}");
+            }
+
+            // 3) Descontar stock
+            foreach (var it in carrito.Items)
+            {
+                var producto = await _context.Productos
+                    .FirstAsync(p => p.ProductoId == it.ProductoId);
+
+                producto.Stock -= it.Cantidad;
+                _context.Productos.Update(producto);
+            }
+
+            // 4) Datos del cliente
             var cliente = await _context.Clientes
                 .Include(c => c.Usuario)
                 .ThenInclude(u => u.Direccion)
@@ -35,7 +64,7 @@ namespace OnePuff_Razor.Services
                 ? $"{cliente.Usuario.Direccion.Calle} {cliente.Usuario.Direccion.Altura}, {cliente.Usuario.Direccion.Localidad}"
                 : "Sin dirección definida";
 
-            // 3) Crear pedido (cabecera)
+            // 5) Crear Pedido
             var pedido = new Pedido
             {
                 ClienteId = clienteId,
@@ -47,7 +76,6 @@ namespace OnePuff_Razor.Services
                 Detalles = new List<PedidoDetalle>()
             };
 
-            // 4) Crear detalles y calcular total
             foreach (var it in carrito.Items)
             {
                 var det = new PedidoDetalle
@@ -56,16 +84,20 @@ namespace OnePuff_Razor.Services
                     Cantidad = it.Cantidad,
                     PrecioUnitario = it.PrecioUnitarioSnapshot
                 };
+
                 pedido.Detalles.Add(det);
-                pedido.Total += det.PrecioUnitario * det.Cantidad;
+                pedido.Total += det.Subtotal;
             }
 
-            // 5) Guardar pedido y cerrar carrito
+            // Guardar pedido + cerrar carrito
             _context.Pedidos.Add(pedido);
-            carrito.EstaCerrado = true;           // cerramos el carrito usado
+            carrito.EstaCerrado = true;
+            _context.Carritos.Update(carrito);
+
             await _context.SaveChangesAsync();
 
             return pedido;
         }
+
     }
 }

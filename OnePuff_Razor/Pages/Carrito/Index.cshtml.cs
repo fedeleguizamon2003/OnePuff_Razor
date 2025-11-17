@@ -70,26 +70,8 @@ namespace OnePuff_Razor.Pages.Carrito
             return new JsonResult(new { count });
         }
 
-        // Finalizar compra (flujo “normal” existente)
-        public async Task<IActionResult> OnPostFinalizarAsync(
-            [FromServices] PedidoService pedidoService,
-            [FromServices] EmailService emailService)
-        {
-            var clienteId = await GetOrCreateClienteIdAsync();
+        
 
-            var pedido = await pedidoService.CrearDesdeCarritoAsync(clienteId);
-
-            // Enviar ticket por mail si hay email
-            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var usuario = await _context.Usuarios.FindAsync(usuarioId);
-            if (!string.IsNullOrWhiteSpace(usuario?.Email))
-            {
-                try { await emailService.EnviarTicketAsync(usuario.Email, pedido); }
-                catch { /* No frenamos por error de email */ }
-            }
-
-            return new JsonResult(new { success = true, pedidoId = pedido.PedidoId });
-        }
 
         // pagar con monedero
         public async Task<IActionResult> OnPostPagarMonederoAsync(
@@ -102,11 +84,12 @@ namespace OnePuff_Razor.Pages.Carrito
             // Traemos carrito e items para calcular total
             var carrito = await _carritoService.GetCarritoConItems(clienteId);
             if (carrito?.Items == null || carrito.Items.Count == 0)
-                return BadRequest("El carrito está vacío.");
+                return new JsonResult(new { success = false, error = "El carrito está vacío." });
 
             var total = carrito.Items.Sum(i => i.PrecioUnitarioSnapshot * i.Cantidad);
             if (total <= 0)
-                return BadRequest("El total del carrito no es válido.");
+                return new JsonResult(new { success = false, error = "El total del carrito no es válido." });
+
 
             // Transacción para crear pedido y debitar monedero de forma atómica
             using var tx = await _context.Database.BeginTransactionAsync();
@@ -116,7 +99,12 @@ namespace OnePuff_Razor.Pages.Carrito
                 // Chequeo de saldo (rápido); el débito real lo valida con RowVersion en el service
                 var mon = await monederoService.GetOrCreateAsync(clienteId);
                 if (mon.Saldo < total)
-                    return BadRequest("Saldo insuficiente en el monedero.");
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        error = "Saldo insuficiente en el monedero."
+                    });
+
 
                 // Creamos el pedido desde el carrito (cierra el carrito)
                 var pedido = await pedidoService.CrearDesdeCarritoAsync(clienteId);
@@ -139,20 +127,32 @@ namespace OnePuff_Razor.Pages.Carrito
             }
             catch (DbUpdateConcurrencyException)
             {
-                // Colisión de concurrencia (otro proceso tocó el monedero)
                 await tx.RollbackAsync();
-                return BadRequest("No se pudo completar el pago: el monedero fue modificado. Probá nuevamente.");
+                return new JsonResult(new
+                {
+                    success = false,
+                    error = "No se pudo completar el pago: el monedero fue modificado."
+                });
             }
             catch (InvalidOperationException ex)
             {
                 await tx.RollbackAsync();
-                return BadRequest(ex.Message);
+                return new JsonResult(new
+                {
+                    success = false,
+                    error = ex.Message
+                });
             }
             catch (Exception ex)
             {
                 await tx.RollbackAsync();
-                return BadRequest("Error al procesar el pago: " + ex.Message);
+                return new JsonResult(new
+                {
+                    success = false,
+                    error = "Error al procesar el pago: " + ex.Message
+                });
             }
+
         }
 
         // Obtiene o crea el Cliente vinculado al usuario logueado (mismo patrón que en otras páginas)

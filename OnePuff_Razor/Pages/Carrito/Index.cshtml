@@ -44,8 +44,7 @@
         <div class="d-flex gap-2">
             <button class="btn btn-danger" onclick="carrito.vaciar()">🗑 Vaciar carrito</button>
 
-            <!-- Finalizar compra “normal” (sin monedero) -->
-            <button type="button" class="btn btn-success" onclick="carrito.finalizar()">💳 Finalizar compra</button>
+   
 
             <!--  pagar con monedero -->
             <button type="button" class="btn btn-primary" onclick="carrito.pagarMonedero()">💼 Pagar con monedero</button>
@@ -69,8 +68,8 @@ else
 
 @section Scripts {
     <script>
-        // Refresca el contenido del carrito dinámicamente (se rehace el <main>)
-        async function actualizarVistaCarrito(){
+        // Refresca el contenido del carrito dinámicamente
+        async function actualizarVistaCarrito() {
             try {
                 const r = await fetch('/Carrito');
                 const html = await r.text();
@@ -86,52 +85,32 @@ else
             }
         }
 
-        // Actualiza el número de ítems del badge en el header
-        async function actualizarBadgeCarrito(){
+        // Actualiza badge del carrito
+        async function actualizarBadgeCarrito() {
             try {
                 const r = await fetch('/Carrito?handler=Count', {
                     headers: { "X-Requested-With": "XMLHttpRequest" }
                 });
+
                 if (!r.ok) return;
+
                 const d = await r.json();
                 const badge = document.getElementById('cart-badge');
                 if (badge) badge.textContent = d.count ?? 0;
-            } catch {}
+            } catch { }
         }
 
-        // Acciones del carrito (AJAX)
+        // ---- OBJETO CARRITO (TODO FUNCIONANDO) ----
         window.carrito = {
-            async agregar(id){ await accion('Agregar', id); },
-            async quitar(id){ await accion('Quitar', id); },
-            async eliminar(id){ await accion('Eliminar', id); },
-            async vaciar(){ await accion('Vaciar'); },
 
-            // Finalización “normal” (crea pedido, no usa monedero)
-            async finalizar(){
-                if (!confirm("¿Confirmás la compra?")) return;
+            async agregar(id) { await accion('Agregar', id); },
+            async quitar(id) { await accion('Quitar', id); },
+            async eliminar(id) { await accion('Eliminar', id); },
+            async vaciar() { await accion('Vaciar'); },
 
-                const qs = new URLSearchParams();
-                qs.set('handler', 'Finalizar');
+            
 
-                const r = await fetch(`/Carrito?${qs}`, {
-                    method: 'POST',
-                    headers: { "X-Requested-With": "XMLHttpRequest" }
-                });
-
-                if (!r.ok) {
-                    const t = await r.text();
-                    alert("❌ No se pudo finalizar el pedido.\n\n" + t);
-                    return;
-                }
-
-                const data = await r.json();
-                alert(`✅ Pedido #${data.pedidoId} creado. Te enviamos el ticket por email.`);
-
-                // Redirigimos al catálogo como pediste
-                window.location.href = "/Productos/Cliente";
-            },
-
-            // NUEVO: pagar con monedero
+            // Pago con monedero
             async pagarMonedero() {
                 if (!confirm("Se debitará el total del monedero. ¿Confirmás el pago?")) return;
 
@@ -143,20 +122,20 @@ else
                     headers: { "X-Requested-With": "XMLHttpRequest" }
                 });
 
-                if (!r.ok) {
-                    const t = await r.text();
-                    alert("❌ No se pudo pagar con el monedero.\n\n" + t);
+                const data = await r.json();
+
+                if (!data.success) {
+                    alert("❌ No se pudo pagar con el monedero:\n\n" + data.error);
                     return;
                 }
 
-                const data = await r.json();
                 alert(`✅ Pago con monedero aplicado. Pedido #${data.pedidoId} creado.`);
                 window.location.href = "/Productos/Cliente";
             }
         };
 
-        // Lógica común para handlers de sumar/quitar/eliminar/vaciar
-        async function accion(handler, productoId = null){
+        // Lógica común
+        async function accion(handler, productoId = null) {
             try {
                 const qs = new URLSearchParams();
                 qs.set('handler', handler);
@@ -179,7 +158,8 @@ else
             }
         }
 
-        // Inicializa el badge al cargar la página
+        // Inicializa el badge al cargar
         document.addEventListener('DOMContentLoaded', actualizarBadgeCarrito);
+
     </script>
 }
